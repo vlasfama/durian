@@ -2,10 +2,10 @@ mod blockchain;
 
 extern crate durian;
 
-use ethereum_types::{U256, Address};
 use blockchain::Blockchain;
 use durian::stateless_vm::StatelessVM;
 use durian::transaction::Transaction;
+use ethereum_types::{Address, U256};
 use std::fs::File;
 use std::io::Read;
 use std::sync::Arc;
@@ -23,29 +23,18 @@ fn main() {
         panic!(err.to_string());
     }
 
-   // let mut data = vec![1,2,3];
-
-
-    //
-    let tx = Transaction::new(
+    let data1 = vec![];
+    let tx1 = Transaction::new(
         bc.get_address("alice"),
-        bc.get_address("bob"),
-        //Address::zero(),
+        Address::zero(),
         U256::from(10000),
-        Some(Arc::new(code)),
-        //Some(data),
-        None,
+        code,
+        data1,
     );
 
     let vm = StatelessVM::new();
 
-    let res = match vm.fire(tx, &bc) {
-        Ok(res) => res,
-        Err(err) => panic!("error"),
-    };
-
+    let addr_1 = vm.fire(tx1, &mut bc);
 
     bc.commit();
-
-
 }

@@ -1,3 +1,4 @@
+use cache::Cache;
 use common_types::engines::params::CommonParams;
 use ethereum_types::{Address, U256};
 use machine::{
@@ -8,9 +9,10 @@ use machine::{
 use state_provider::StateProvider;
 use stateless_ext::StatelessExt;
 use std::collections::BTreeMap;
+use std::sync::Arc;
 use trace::{NoopTracer, NoopVMTracer};
 use transaction::Transaction;
-use vm::{schedule::WasmCosts, ActionParams, EnvInfo, Exec, CallType, GasLeft};
+use vm::{schedule::WasmCosts, ActionParams, CallType, EnvInfo, Exec, GasLeft};
 use wasm::WasmInterpreter;
 
 pub struct StatelessVM {}
@@ -20,24 +22,45 @@ impl StatelessVM {
         StatelessVM {}
     }
 
-    pub fn fire<T: StateProvider>(
-        &self,
-        transaction: Transaction,
-        provider: &T,
-    ) -> vm::ExecTrapResult<vm::GasLeft> {
+    pub fn fire<T: StateProvider>(&self, transaction: Transaction, provider: & mut T) -> Address
+    // TODO:::::::::::: check what to resturn
+    /*-> vm::ExecTrapResult<vm::GasLeft>*/
+    {
+        let mut cache = Cache::new(provider);
+
         let mut action_params = ActionParams::default();
-        ////action_params.call_type =  CallType::CallCode;
         action_params.sender = transaction.caller;
-        action_params.origin = transaction.caller;
-        action_params.address = transaction.caller;
+        action_params.address = transaction.contract;
         action_params.gas = transaction.gas;
-        action_params.data = transaction.data;
-        action_params.code = transaction.code;
+        action_params.data = Some(transaction.data);
+        action_params.code = Some(Arc::new(transaction.code));
+        /// TODO:????
+        let mut deploy = false;
+
+        /// TODO: we can delete this variable
+        let mut address11 = Address::zero();
+        if action_params.address == Address::zero() {
+            let (new_address, _) = match cache.get_nonce(&transaction.caller) {
+                Some(nonce) => machine::executive::contract_address(
+                    vm::CreateContractAddress::FromSenderAndNonce,
+                    &transaction.caller,
+                    &nonce,
+                    &vec![],
+                ),
+
+                _ => panic!("invalid address"),
+            };
+
+            address11 = new_address;
+            action_params.address = new_address;
+            deploy = true;
+        }
 
         let mut env_info = EnvInfo::default();
         env_info.timestamp = 111;
         env_info.gas_limit = U256::from(100000000);
         env_info.number = 1;
+
         let machine_params = CommonParams::default();
         let builtins = BTreeMap::default();
         let machine = Machine::regular(machine_params, builtins);
@@ -53,13 +76,12 @@ impl StatelessVM {
         let static_flag = false;
 
         let mut wasm = vm::WasmCosts::default();
-        wasm.have_create2 = true;
-        wasm.have_gasleft = true;
+        //wasm.have_create2 = true;
+        //wasm.have_gasleft = true;
 
         schedule.wasm = Some(wasm);
         let mut ext = StatelessExt::new(
-            &env_info,
-            &machine,
+            &env_info, &machine,
             &schedule,
             //depth,
             //stack_depth,
@@ -72,8 +94,56 @@ impl StatelessVM {
             //static_flag,
         );
 
+        /*
+        let (new_address, code_hash) = contract_address(CreateContractAddress::FromSenderAndNonce, &sender, &nonce, &t.data);
+                let params = ActionParams {
+                    code_address: new_address.clone(),
+                    code_hash: code_hash,
+                    address: new_address,
+                    sender: sender.clone(),
+                    origin: sender.clone(),
+                    gas: init_gas,
+                    gas_price: t.gas_price,
+                    value: ActionValue::Transfer(t.value),
+                    code: Some(Arc::new(t.data.clone())),
+                    code_version: schedule.latest_version,
+                    data: None,
+                    call_type: CallType::None,
+                    params_type: vm::ParamsType::Embedded,
+                };
+
+                */
+
         let interpreter = Box::new(WasmInterpreter::new(action_params));
 
-        interpreter.exec(&mut ext)
+        let interpreter_return = match interpreter
+            .exec(&mut ext)
+            .ok()
+            .expect("Wasm interpreter always calls with trap=false; trap never happens; qed")
+        {
+            Ok(ret) => match ret {
+                GasLeft::NeedsReturn {
+                    gas_left,
+                    data,
+                    apply_state,
+                } => {
+                    if deploy == true {
+                        cache.create_account(
+                            address11,
+                            U256::zero(),
+                            U256::zero(),
+                            Some(data.to_vec()),
+                        );
+                    }
+                }
+                _ => (),
+            },
+            // TODO
+            Err(e) => {
+                panic!(e);
+            }
+        };
+
+        address11
     }
 }

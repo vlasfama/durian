@@ -7,8 +7,8 @@ pub struct Transaction {
     pub caller: Address,
     pub contract: Address,
     pub gas: U256,
-    pub code: Option<Arc<Bytes>>,
-    pub data: Option<Bytes>,
+    pub code: Bytes,
+    pub data: Bytes,
 }
 
 impl Transaction {
@@ -16,8 +16,8 @@ impl Transaction {
         caller: Address,
         contract: Address,
         gas: U256,
-        code: Option<Arc<Bytes>>,
-        data: Option<Bytes>,
+        code: Bytes,
+        data: Bytes,
     ) -> Self {
         Transaction {
             caller,
