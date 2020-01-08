@@ -1,17 +1,26 @@
-use ethereum_types::{Address, U256, U512};
+use ethereum_types::{Address, H256, U256, U512};
 
-pub struct Account {
+
+/// VM errors.
+#[derive(Debug, Clone, PartialEq)]
+pub enum Error {
+    InvalidAddress,
+    InvalidStorageKey,
+}
+
+pub struct StateAccount {
     pub nonce: U256,
     pub balance: U256,
-    pub code: Option<Vec<u8>>,
+    pub code: Vec<u8>,
 }
 
 pub trait StateProvider {
-    fn get_account(&self, address: Address) -> Option<Account>;
-    fn storage_at(&self, key: U256) -> U256;
+    fn account(&self, address: &Address) -> Result<StateAccount, Error>;
+    fn storage_at(&self, address: &Address, key: &H256) -> Result<H256, Error>;
     fn blockhash(&self, num: i64) -> U512;
-    fn exist(&self, address: Address) -> bool;
+    fn exist(&self, address: &Address) -> bool;
 
-    fn create_account(&mut self, address: Address, account: Account);
+    fn create_account(&mut self, address: Address, info: StateAccount);
+    fn set_storage(&mut self, address: &Address, key: &H256, value: &H256);
 
 }

@@ -7,8 +7,8 @@ extern crate vm;
 extern crate machine;
 extern crate trace;
 
-pub mod state_provider;
+pub mod transaction;
 pub mod stateless_ext;
 pub mod stateless_vm;
-pub mod transaction;
-pub mod cache;
+pub mod state_provider;
+pub mod state_cache;

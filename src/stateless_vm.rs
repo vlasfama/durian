@@ -1,4 +1,3 @@
-use cache::Cache;
 use common_types::engines::params::CommonParams;
 use ethereum_types::{Address, U256};
 use machine::{
@@ -6,6 +5,7 @@ use machine::{
     substate::Substate,
     Machine,
 };
+use state_cache::StateCache;
 use state_provider::StateProvider;
 use stateless_ext::StatelessExt;
 use std::collections::BTreeMap;
@@ -22,11 +22,10 @@ impl StatelessVM {
         StatelessVM {}
     }
 
-    pub fn fire<T: StateProvider>(&self, transaction: Transaction, provider: & mut T) -> Address
-    // TODO:::::::::::: check what to resturn
-    /*-> vm::ExecTrapResult<vm::GasLeft>*/
-    {
-        let mut cache = Cache::new(provider);
+    pub fn fire<T: StateProvider>(&self, transaction: Transaction, provider: &mut T) -> Address
+// TODO:::::::::::: check what to resturn
+    /*-> vm::ExecTrapResult<vm::GasLeft>*/ {
+        let mut cache = StateCache::new(provider);
 
         let mut action_params = ActionParams::default();
         action_params.sender = transaction.caller;
@@ -40,8 +39,8 @@ impl StatelessVM {
         /// TODO: we can delete this variable
         let mut address11 = Address::zero();
         if action_params.address == Address::zero() {
-            let (new_address, _) = match cache.get_nonce(&transaction.caller) {
-                Some(nonce) => machine::executive::contract_address(
+            let (new_address, _) = match cache.nonce(&transaction.caller) {
+                Ok(nonce) => machine::executive::contract_address(
                     vm::CreateContractAddress::FromSenderAndNonce,
                     &transaction.caller,
                     &nonce,
@@ -54,6 +53,8 @@ impl StatelessVM {
             address11 = new_address;
             action_params.address = new_address;
             deploy = true;
+            cache.create_account(address11, U256::zero(), U256::zero(), vec![]);
+
         }
 
         let mut env_info = EnvInfo::default();
@@ -66,32 +67,36 @@ impl StatelessVM {
         let machine = Machine::regular(machine_params, builtins);
         let mut schedule = machine.schedule(env_info.number);
         /// TODO::>?????
-        let depth = 10;
-        let stack_depth = 10;
-        //let origin_info = OriginInfo::from(&action_params);
+        let depth = 100;
+        let stack_depth = 100;
+        let origin_info = OriginInfo::from(&action_params);
         let mut substate = Substate::new();
         let output = OutputPolicy::InitContract;
         let mut tracer = NoopTracer;
         let mut vm_tracer = NoopVMTracer;
         let static_flag = false;
 
-        let mut wasm = vm::WasmCosts::default();
+        let wasm = vm::WasmCosts::default();
         //wasm.have_create2 = true;
         //wasm.have_gasleft = true;
+        // TODO:::::::::::::::::
+        let mut action_params_1 = action_params.clone();
 
         schedule.wasm = Some(wasm);
         let mut ext = StatelessExt::new(
-            &env_info, &machine,
+            &env_info,
+            &machine,
             &schedule,
             //depth,
             //stack_depth,
-            ////&origin_info,
+            action_params_1,
             //&mut substate,
             //output,
             //&mut tracer,
             //&mut vm_tracer,
             //provider,
             //static_flag,
+            &mut cache,
         );
 
         /*
@@ -114,13 +119,15 @@ impl StatelessVM {
 
                 */
 
+
         let interpreter = Box::new(WasmInterpreter::new(action_params));
 
-        let interpreter_return = match interpreter
+        let interpreter_return = interpreter
             .exec(&mut ext)
             .ok()
-            .expect("Wasm interpreter always calls with trap=false; trap never happens; qed")
-        {
+            .expect("Wasm interpreter always calls with trap=false; trap never happens; qed");
+
+        match interpreter_return {
             Ok(ret) => match ret {
                 GasLeft::NeedsReturn {
                     gas_left,
@@ -128,12 +135,7 @@ impl StatelessVM {
                     apply_state,
                 } => {
                     if deploy == true {
-                        cache.create_account(
-                            address11,
-                            U256::zero(),
-                            U256::zero(),
-                            Some(data.to_vec()),
-                        );
+                        //ext.create_account(address11, U256::zero(), U256::zero(), data.to_vec());
                     }
                 }
                 _ => (),

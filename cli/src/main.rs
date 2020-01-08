@@ -23,16 +23,30 @@ fn main() {
         panic!(err.to_string());
     }
 
-    let data1 = vec![];
+    //let total = U256::from(1000);
+    let data1 = vec![1,2,3,4,5,6,7,8,9,0,1,2,3,4,5,6,7,8,9,0,1,2,3,4,5,6,7,8,9,0,1,2];
+    //let data1 = vec![1,2,3,4,5,6,7,8,9,0,1,2,3];
     let tx1 = Transaction::new(
-        bc.get_address("alice"),
+        bc.address("alice"),
         Address::zero(),
-        U256::from(10000),
+        U256::from(10000000),
         code,
         data1,
     );
 
     let vm = StatelessVM::new();
+
+    let addr_1 = vm.fire(tx1, &mut bc);
+    let code = bc.code("contract");
+
+    let data1 = vec![];
+    let tx1 = Transaction::new(
+        bc.address("alice"),
+        addr_1,
+        U256::from(10000),
+        code,
+        data1,
+    );
 
     let addr_1 = vm.fire(tx1, &mut bc);
 
