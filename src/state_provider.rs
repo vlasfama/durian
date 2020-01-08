@@ -22,5 +22,6 @@ pub trait StateProvider {
 
     fn create_account(&mut self, address: Address, info: StateAccount);
     fn set_storage(&mut self, address: &Address, key: &H256, value: &H256);
+    fn set_code(&mut self, address: &Address, code: Vec<u8>);
 
 }

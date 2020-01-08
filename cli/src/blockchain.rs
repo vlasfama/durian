@@ -81,6 +81,15 @@ impl<'a> Blockchain<'a> {
 
         Err(Error::InvalidAddress)
     }
+
+    pub fn set_code1(&mut self, address: &Address, code: Vec<u8>) {
+            for (_, acc) in self.accounts.iter_mut() {
+            if acc.address == *address {
+                acc.code = code;
+                break;
+            }
+        }
+    }
 }
 
 impl<'a> StateProvider for Blockchain<'a> {
@@ -113,7 +122,9 @@ impl<'a> StateProvider for Blockchain<'a> {
         for (_, acc) in self.accounts.iter_mut() {
             if acc.address == *address {
                 let val = acc.storage.entry(*key).or_insert(*value);
-                *val = *value;            }
+                *val = *value;
+                break;
+            }
         }
 
        // let acc = self.account(address).unwrap();
@@ -125,6 +136,15 @@ impl<'a> StateProvider for Blockchain<'a> {
     }
     fn exist(&self, address: &Address) -> bool {
         false
+    }
+
+    fn set_code(&mut self, address: &Address, code: Vec<u8>) {
+            for (_, acc) in self.accounts.iter_mut() {
+            if acc.address == *address {
+                acc.code = code;
+                break;
+            }
+        }
     }
 }
 
