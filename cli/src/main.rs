@@ -13,7 +13,7 @@ use std::sync::Arc;
 fn main() {
     let mut bc = Blockchain::new();
 
-    let file_path = "/home/mostafa/Downloads/pwasm_tutorial_contract.wasm";
+    let file_path = "./compiled-contract/pwasm_erc20_token.wasm";
     let mut file = match File::open(file_path) {
         Ok(file) => file,
         Err(err) => panic!(err.to_string()),
