@@ -22,7 +22,7 @@ impl StatelessVM {
         StatelessVM {}
     }
 
-    pub fn fire<T: StateProvider>(&self, transaction: Transaction, provider: &mut T) -> Address
+    pub fn fire<T: StateProvider>(&self, transaction: Transaction, provider: &mut T) -> Vec<u8>
 // TODO:::::::::::: check what to resturn
     /*-> vm::ExecTrapResult<vm::GasLeft>*/ {
         let mut cache = StateCache::new(provider);
@@ -127,6 +127,7 @@ impl StatelessVM {
             .ok()
             .expect("Wasm interpreter always calls with trap=false; trap never happens; qed");
 
+            let mut d = vec![1];
         match interpreter_return {
             Ok(ret) => match ret {
                 GasLeft::NeedsReturn {
@@ -135,7 +136,8 @@ impl StatelessVM {
                     apply_state,
                 } => {
                     if deploy == true {
-                        //ext.create_account(address11, U256::zero(), U256::zero(), data.to_vec());
+                        d = data.to_vec();
+                       // cache.set_code(&address11, data.to_vec());
                     }
                 }
                 _ => (),
@@ -146,6 +148,6 @@ impl StatelessVM {
             }
         };
 
-        address11
+        d
     }
 }

@@ -36,19 +36,28 @@ fn main() {
 
     let vm = StatelessVM::new();
 
-    let addr_1 = vm.fire(tx1, &mut bc);
-    let code = bc.code("contract");
+    let code = vm.fire(tx1, &mut bc);
+    let addr_1 = bc.address("contract");
 
-    let data1 = vec![];
-    let tx1 = Transaction::new(
+    bc.set_code1(&addr_1, code);
+
+
+    let code = bc.code("contract");
+    // let data_setX = vec![0x40,0x18,0xd9,0xaa,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
+    let data = vec![0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0x40,0x18,0xd9,0xaa,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0x12,0x34];
+
+    let tx2 = Transaction::new(
         bc.address("alice"),
         addr_1,
         U256::from(10000),
         code,
-        data1,
+        data,
     );
 
-    let addr_1 = vm.fire(tx1, &mut bc);
+    let addr_2 = vm.fire(tx2, &mut bc);
 
     bc.commit();
+
+
+
 }
