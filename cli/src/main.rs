@@ -1,19 +1,26 @@
 mod blockchain;
 
 extern crate durian;
+#[macro_use]
+extern crate log;
+extern crate simple_logger;
 
 use blockchain::Blockchain;
 use durian::stateless_vm::StatelessVM;
-use durian::transaction::Transaction;
+use durian::transaction::{Transaction, Action};
 use ethereum_types::{Address, U256};
 use std::fs::File;
 use std::io::Read;
 use std::sync::Arc;
 
+
 fn main() {
+    simple_logger::init().unwrap();
+    warn!("This is an example message.");
+
     let mut bc = Blockchain::new();
 
-    let file_path = "./compiled-contract/pwasm_erc20_token.wasm";
+    let file_path = "./compiled-contract/pwasm_greeter.wasm";
     let mut file = match File::open(file_path) {
         Ok(file) => file,
         Err(err) => panic!(err.to_string()),
@@ -23,35 +30,29 @@ fn main() {
         panic!(err.to_string());
     }
 
-    //let total = U256::from(1000);
-    let data1 = vec![1,2,3,4,5,6,7,8,9,0,1,2,3,4,5,6,7,8,9,0,1,2,3,4,5,6,7,8,9,0,1,2];
-    //let data1 = vec![1,2,3,4,5,6,7,8,9,0,1,2,3];
-    let tx1 = Transaction::new(
+    let tx1 = Transaction::create(
         bc.address("alice"),
-        Address::zero(),
         U256::from(10000000),
+        U256::zero(),
         code,
-        data1,
+        vec![],
     );
 
     let vm = StatelessVM::new();
 
     let code = vm.fire(tx1, &mut bc);
-    let addr_1 = bc.address("contract");
+    let addr_1 = bc.address("contract_0");
+    let code = bc.code("contract_0");
+    
+    let params = vec![0x40,0x18,0xd9,0xaa,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0x12,0x34];
 
-    bc.set_code1(&addr_1, code);
-
-
-    let code = bc.code("contract");
-    // let data_setX = vec![0x40,0x18,0xd9,0xaa,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
-    let data = vec![0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0x40,0x18,0xd9,0xaa,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0x12,0x34];
-
-    let tx2 = Transaction::new(
+    let tx2 = Transaction::call(
         bc.address("alice"),
         addr_1,
-        U256::from(10000),
+        U256::from(1000000),
+        U256::zero(),
         code,
-        data,
+        params,
     );
 
     let addr_2 = vm.fire(tx2, &mut bc);

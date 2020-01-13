@@ -1,30 +1,59 @@
 use ethereum_types::{Address, U256};
 use parity_bytes::Bytes;
-use std::sync::Arc;
+
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum Action {
+	Create,
+    Call(Address),
+}
+
 
 #[derive(Debug)]
 pub struct Transaction {
-    pub caller: Address,
-    pub contract: Address,
+    pub sender: Address,
+    pub value: U256,
     pub gas: U256,
+    pub action: Action,
     pub code: Bytes,
-    pub data: Bytes,
+    pub params: Bytes,
 }
 
+
 impl Transaction {
-    pub fn new(
-        caller: Address,
-        contract: Address,
+    pub fn create(
+        sender: Address,
+        value: U256,
         gas: U256,
         code: Bytes,
-        data: Bytes,
+        params: Bytes,
     ) -> Self {
         Transaction {
-            caller,
-            contract,
+            action: Action::Create,
+            sender,
+            value,
             gas,
             code,
-            data,
+            params,
         }
     }
+
+    pub fn call(
+        sender: Address,
+        contract: Address,
+        value: U256,
+        gas: U256,
+        code: Bytes,
+        params: Bytes,
+    ) -> Self {
+        Transaction {
+            action: Action::Call(contract),
+            sender,
+            value,
+            gas,
+            code,
+            params,
+        }
+    }
+
 }

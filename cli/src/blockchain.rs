@@ -30,26 +30,32 @@ pub struct Account {
 }
 
 #[derive(Debug)]
-pub struct Blockchain<'a> {
+pub struct Blockchain {
     blocks: Vec<Block>,
-    accounts: HashMap<&'a str, Account>,
+    accounts: HashMap<String, Account>,
     counter: i32,
 }
 
-impl<'a> Blockchain<'a> {
-    pub fn new() -> Blockchain<'a> {
+impl Blockchain {
+    pub fn new() -> Blockchain {
         let gen = Block::new(0, Hash::zero());
         let mut accounts = HashMap::new();
         accounts.insert(
-            "alice",
-            Account::new(Address::random(), U256::from(1000000)),
+            "alice".to_string(),
+            Account::new(Address::random(), U256::from(1000000), U256::zero()),
         );
-        accounts.insert("bob", Account::new(Address::random(), U256::from(1000000)));
         accounts.insert(
-            "carol",
-            Account::new(Address::random(), U256::from(1000000)),
+            "bob".to_string(),
+            Account::new(Address::random(), U256::from(1000000), U256::zero()),
         );
-        accounts.insert("dave", Account::new(Address::random(), U256::from(1000000)));
+        accounts.insert(
+            "carol".to_string(),
+            Account::new(Address::random(), U256::from(1000000), U256::zero()),
+        );
+        accounts.insert(
+            "dave".to_string(),
+            Account::new(Address::random(), U256::from(1000000), U256::zero()),
+        );
 
         Blockchain {
             blocks: vec![gen],
@@ -83,7 +89,7 @@ impl<'a> Blockchain<'a> {
     }
 
     pub fn set_code1(&mut self, address: &Address, code: Vec<u8>) {
-            for (_, acc) in self.accounts.iter_mut() {
+        for (_, acc) in self.accounts.iter_mut() {
             if acc.address == *address {
                 acc.code = code;
                 break;
@@ -92,7 +98,7 @@ impl<'a> Blockchain<'a> {
     }
 }
 
-impl<'a> StateProvider for Blockchain<'a> {
+impl StateProvider for Blockchain {
     fn account(&self, address: &Address) -> Result<StateAccount, Error> {
         let acc = self.account(address)?;
         Ok(StateAccount {
@@ -102,12 +108,11 @@ impl<'a> StateProvider for Blockchain<'a> {
         })
     }
 
-    fn create_account(&mut self, address: Address, account: StateAccount) {
-        //let name = format!("contract_{}", self.counter);
-        let mut acc = Account::new(address, account.balance);
-        acc.code = account.code;
-        //self.accounts.insert(&name, acc);
-        self.accounts.insert("contract", acc);
+    fn create_contract(&mut self, address: Address, nonce: U256) {
+        let name = format!("contract_{}", self.counter);
+        let mut acc = Account::new(address, U256::zero(), nonce);
+        self.accounts.insert(name, acc);
+
         self.counter = self.counter + 1;
     }
 
@@ -115,7 +120,7 @@ impl<'a> StateProvider for Blockchain<'a> {
         let acc = self.account(address)?;
         match acc.storage.get(key) {
             Some(storage) => Ok(*storage),
-            _ => Err(Error::InvalidStorageKey)
+            _ => Err(Error::InvalidStorageKey),
         }
     }
     fn set_storage(&mut self, address: &Address, key: &H256, value: &H256) {
@@ -127,7 +132,7 @@ impl<'a> StateProvider for Blockchain<'a> {
             }
         }
 
-       // let acc = self.account(address).unwrap();
+        // let acc = self.account(address).unwrap();
         //let val = acc.storage.entry(*key).or_insert(*value);
         //*val = *value;
     }
@@ -139,7 +144,7 @@ impl<'a> StateProvider for Blockchain<'a> {
     }
 
     fn set_code(&mut self, address: &Address, code: Vec<u8>) {
-            for (_, acc) in self.accounts.iter_mut() {
+        for (_, acc) in self.accounts.iter_mut() {
             if acc.address == *address {
                 acc.code = code;
                 break;
@@ -164,11 +169,11 @@ impl Block {
 }
 
 impl Account {
-    pub fn new(addr: Address, bal: U256) -> Account {
+    pub fn new(addr: Address, bal: U256, nonce: U256) -> Account {
         Account {
             address: addr,
             balance: bal,
-            nonce: U256::from(0),
+            nonce: nonce,
             code: vec![],
             storage: HashMap::new(),
         }

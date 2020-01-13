@@ -2,7 +2,7 @@ use std::{sync::Arc};
 use ethereum_types::{Address, H256, U256};
 use parity_bytes::Bytes;
 use machine::{
-    externalities::{OriginInfo, OutputPolicy},
+    externalities::{OutputPolicy},
     substate::Substate,
     Machine,
 };
@@ -12,13 +12,15 @@ use vm::{
     self, CallType, ContractCreateResult, ActionParams, CreateContractAddress,
     EnvInfo, Ext, MessageCallResult, ReturnData, Schedule, TrapKind,
 };
+use state_provider::StateProvider;
+
+
 
 pub struct StatelessExt<'a/*, T: 'a, V: 'a, S:'a*/> {
     env_info: &'a EnvInfo,
     //depth: usize,
     //stack_depth: usize,
-    //origin_info: &'a OriginInfo,
-    action_params: ActionParams,
+    params: &'a ActionParams,
     //substate: &'a mut Substate,
     machine: &'a Machine,
     schedule: &'a Schedule,
@@ -28,7 +30,7 @@ pub struct StatelessExt<'a/*, T: 'a, V: 'a, S:'a*/> {
     //state_provider: &'a S,
     //static_flag: bool,
   //  storageProvider: StateProvider;
-    cache:  &'a mut StateCache<'a>,
+    cache:  StateCache<'a>,
 }
 
 impl<'a/*, T: 'a, V: 'a, S: 'a*/> StatelessExt<'a/*, T, V, S*/>
@@ -44,40 +46,31 @@ impl<'a/*, T: 'a, V: 'a, S: 'a*/> StatelessExt<'a/*, T, V, S*/>
         schedule: &'a Schedule,
         //depth: usize,
         //stack_depth: usize,
-        action_params:  ActionParams,
+		params: &'a ActionParams,
         //substate: &'a mut Substate,
         //output: OutputPolicy,
         //tracer: &'a mut T,
         //vm_tracer: &'a mut V,
-        //state_provider: &'a S,
+        provider: &'a mut dyn StateProvider,
         //static_flag: bool,
-        cache: &'a mut StateCache<'a>,
     ) -> Self {
+
+        let mut cache = StateCache::new(provider);
+
         StatelessExt {
             env_info,
             //depth,
             //stack_depth,
-            action_params,
+            params,
             //substate,
             machine,
             schedule,
             //output,
             //tracer,
             //vm_tracer,
-            //state_provider,
             //static_flag,
             cache,
         }
-    }
-
-    pub fn   create_account(
-        &mut self,
-        address: Address,
-        nonce: U256,
-        balance: U256,
-        code: Vec<u8>,
-    ) {
-        self.cache.create_account(address, nonce, balance, code);
     }
 }
 
@@ -96,11 +89,11 @@ impl<'a> Ext for StatelessExt<'a>
     }
 
     fn storage_at(&self, key: &H256) -> vm::Result<H256> {
-        self.cache.storage_at(&self.action_params.address, key).map_err(Into::into)
+        self.cache.storage_at(&self.params.address, key).map_err(Into::into)
     }
 
     fn set_storage(&mut self, key: H256, value: H256) -> vm::Result<()> {
-        self.cache.set_storage(&self.action_params.address, &key, &value);
+        self.cache.set_storage(&self.params.address, &key, &value);
         Ok(())
     }
 

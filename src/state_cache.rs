@@ -43,22 +43,14 @@ impl<'a> StateCache<'a> {
     }
 
     ///
-    pub fn create_account(&mut self, address: Address, nonce: U256, balance: U256, code: Vec<u8>) {
+    pub fn create_contract(&mut self, address: Address, nonce: U256) {
         // TODO
-        let code1 = code.clone();
-        let mut acc = AccountInfo::new(balance, nonce, code);
+        let mut acc = AccountInfo::new(U256::zero(), nonce, vec![]);
         acc.changed = true;
         /// TODO
         let _ret = self.accounts.get_mut().insert(address, acc);
 
-        self.provider.create_account(
-            address,
-            StateAccount {
-                balance: balance,
-                nonce: nonce,
-                code: code1,
-            },
-        );
+        self.provider.create_contract(address, nonce);
     }
 
     pub fn nonce(&mut self, address: &Address) -> vm::Result<U256> {
@@ -143,7 +135,6 @@ impl<'a> StateCache<'a> {
     }
 
     pub fn set_code(&mut self, address: &Address, code: Vec<u8>) {
-
         /// TEMP
         self.provider.set_code(address, code);
     }
