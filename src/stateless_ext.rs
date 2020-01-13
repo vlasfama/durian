@@ -72,6 +72,7 @@ impl<'a/*, T: 'a, V: 'a, S: 'a*/> StatelessExt<'a/*, T, V, S*/>
             cache,
         }
     }
+
 }
 
 impl<'a> Ext for StatelessExt<'a>

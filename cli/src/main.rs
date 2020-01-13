@@ -32,30 +32,46 @@ fn main() {
 
     let tx1 = Transaction::create(
         bc.address("alice"),
-        U256::from(10000000),
         U256::zero(),
+        U256::from(10000000),
         code,
         vec![],
     );
 
     let vm = StatelessVM::new();
 
-    let code = vm.fire(tx1, &mut bc);
+    let ret_1 = vm.fire(tx1, &mut bc);
+
     let addr_1 = bc.address("contract_0");
     let code = bc.code("contract_0");
-    
+
     let params = vec![0x40,0x18,0xd9,0xaa,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0x12,0x34];
 
     let tx2 = Transaction::call(
         bc.address("alice"),
         addr_1,
-        U256::from(1000000),
         U256::zero(),
-        code,
+        U256::from(1000000),
+        code.clone(),
         params,
     );
 
-    let addr_2 = vm.fire(tx2, &mut bc);
+    let ret_2 = vm.fire(tx2, &mut bc);
+
+    bc.commit();
+
+    let params = vec![0x51,0x97,0xc7,0xaa];
+
+    let tx3 = Transaction::call(
+        bc.address("alice"),
+        addr_1,
+        U256::zero(),
+        U256::from(1000000),
+        code.clone(),
+        params,
+    );
+
+    let ret_3 = vm.fire(tx3, &mut bc);
 
     bc.commit();
 

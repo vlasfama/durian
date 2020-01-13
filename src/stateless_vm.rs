@@ -25,7 +25,7 @@ impl StatelessVM {
         &self,
         transaction: Transaction,
         provider: &mut T,
-    ) -> vm::ExecTrapResult<GasLeft> {
+    ) /*-> vm::ExecTrapResult<GasLeft>*/ {
         let params = match transaction.action {
             Action::Create => {
                 let acc = match provider.account(&transaction.sender) {
@@ -91,6 +91,31 @@ impl StatelessVM {
 
         let interpreter = Box::new(WasmInterpreter::new(params.clone()));
 
-        interpreter.exec(&mut ext)
+        let ret = interpreter.exec(&mut ext);
+        match ret {
+            Ok(val) => {
+                match val {
+                    Ok(GasLeft::Known(gas_left)) => {
+                        /*Ok(FinalizationResult {
+                            gas_left,
+                            apply_state: true,
+                            return_data: ReturnData::empty()
+                        })
+                        */
+                    },
+                    Ok(GasLeft::NeedsReturn { gas_left, data, apply_state }) => {
+                        if transaction.action == Action::Create {
+                            provider.init_code(&params.address, data.to_vec());
+
+                        }
+                    },
+                    Err(err) => panic!("error {}", err),
+                }
+            }
+            Err(err) => panic!("error"),
+        }
+
+
+
     }
 }

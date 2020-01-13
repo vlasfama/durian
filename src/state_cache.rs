@@ -134,8 +134,8 @@ impl<'a> StateCache<'a> {
         }
     }
 
-    pub fn set_code(&mut self, address: &Address, code: Vec<u8>) {
+    pub fn init_code(&mut self, address: &Address, code: Vec<u8>) {
         /// TEMP
-        self.provider.set_code(address, code);
+        self.provider.init_code(address, code);
     }
 }

@@ -22,7 +22,6 @@ pub trait StateProvider {
     fn exist(&self, address: &Address) -> bool;
 
     fn create_contract(&mut self, address: Address, nonce: U256);
+    fn init_code(&mut self, address: &Address, code: Vec<u8>);
     fn set_storage(&mut self, address: &Address, key: &H256, value: &H256);
-    fn set_code(&mut self, address: &Address, code: Vec<u8>);
-
 }

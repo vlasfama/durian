@@ -143,7 +143,7 @@ impl StateProvider for Blockchain {
         false
     }
 
-    fn set_code(&mut self, address: &Address, code: Vec<u8>) {
+    fn init_code(&mut self, address: &Address, code: Vec<u8>) {
         for (_, acc) in self.accounts.iter_mut() {
             if acc.address == *address {
                 acc.code = code;
