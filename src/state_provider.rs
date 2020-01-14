@@ -1,11 +1,5 @@
 use ethereum_types::{Address, H256, U256, U512};
-
-
-#[derive(Debug, Clone, PartialEq)]
-pub enum Error {
-    InvalidAddress,
-    InvalidStorageKey,
-}
+use error::Error;
 
 pub struct StateAccount {
     pub nonce: U256,
@@ -15,8 +9,6 @@ pub struct StateAccount {
 
 pub trait StateProvider {
     fn account(&self, address: &Address) -> Result<StateAccount, Error>;
-    //fn nonce(&self, address: &Address) -> Result<U256, Error>;
-    //fn code(&self, address: &Address) -> Result<Vec<u8>, Error>;
     fn storage_at(&self, address: &Address, key: &H256) -> Result<H256, Error>;
     fn blockhash(&self, num: i64) -> U512;
     fn exist(&self, address: &Address) -> bool;

@@ -12,3 +12,4 @@ pub mod stateless_ext;
 pub mod stateless_vm;
 pub mod state_provider;
 pub mod state_cache;
+pub mod error;

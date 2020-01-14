@@ -4,7 +4,8 @@ extern crate serde;
 extern crate serde_derive;
 extern crate sha3;
 
-use durian::state_provider::{Error, StateAccount, StateProvider};
+use durian::state_provider::{StateAccount, StateProvider};
+use durian::error::Error;
 use ethereum_types::{Address, H256, U256, U512};
 use serde::{Deserialize, Serialize};
 use sha3::{Digest, Keccak256};
@@ -86,15 +87,6 @@ impl Blockchain {
         }
 
         Err(Error::InvalidAddress)
-    }
-
-    pub fn set_code1(&mut self, address: &Address, code: Vec<u8>) {
-        for (_, acc) in self.accounts.iter_mut() {
-            if acc.address == *address {
-                acc.code = code;
-                break;
-            }
-        }
     }
 }
 

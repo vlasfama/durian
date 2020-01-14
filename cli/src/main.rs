@@ -40,11 +40,9 @@ fn main() {
 
     let vm = StatelessVM::new();
 
-    let ret_1 = vm.fire(tx1, &mut bc);
+    let ret_1 = vm.fire(tx1, &mut bc).unwrap();
 
-    let addr_1 = bc.address("contract_0");
-    let code = bc.code("contract_0");
-
+    let addr_1 = ret_1.contract;
     let params = vec![0x40,0x18,0xd9,0xaa,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0x12,0x34];
 
     let tx2 = Transaction::call(
@@ -52,7 +50,7 @@ fn main() {
         addr_1,
         U256::zero(),
         U256::from(1000000),
-        code.clone(),
+        vec![],
         params,
     );
 
@@ -67,14 +65,11 @@ fn main() {
         addr_1,
         U256::zero(),
         U256::from(1000000),
-        code.clone(),
+        vec![],
         params,
     );
 
     let ret_3 = vm.fire(tx3, &mut bc);
 
     bc.commit();
-
-
-
 }
