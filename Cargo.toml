@@ -27,6 +27,5 @@ git = "https://github.com/b00f/parity-ethereum.git"
 [dependencies.common-types]
 git = "https://github.com/b00f/parity-ethereum.git"
 
-
 [lib]
 path = "src/lib.rs"

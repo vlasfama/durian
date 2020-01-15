@@ -13,17 +13,22 @@ use log::Level;
 use std::fs::File;
 use std::io::Read;
 use std::sync::Arc;
+mod rpc;
+
 
 fn main() {
     simple_logger::init_with_level(Level::Info).unwrap();
 
+    rpc::rpc_init();
+    // RpcImpl::main();
     let mut bc = Blockchain::new();
-
     let file_path = "./compiled-contract/pwasm_greeter.wasm";
+
     let mut file = match File::open(file_path) {
         Ok(file) => file,
         Err(err) => panic!(err.to_string()),
     };
+
     let mut code = Vec::new();
     if let Err(err) = file.read_to_end(&mut code) {
         panic!(err.to_string());
