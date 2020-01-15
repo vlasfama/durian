@@ -12,19 +12,25 @@ use ethereum_types::{Address, U256};
 use std::fs::File;
 use std::io::Read;
 use std::sync::Arc;
+mod rpc;
+
 
 
 fn main() {
+
     simple_logger::init().unwrap();
     warn!("This is an example message.");
 
+    rpc::rpc_init();
+    // RpcImpl::main();
     let mut bc = Blockchain::new();
-
     let file_path = "./compiled-contract/pwasm_greeter.wasm";
+
     let mut file = match File::open(file_path) {
         Ok(file) => file,
         Err(err) => panic!(err.to_string()),
     };
+
     let mut code = Vec::new();
     if let Err(err) = file.read_to_end(&mut code) {
         panic!(err.to_string());
@@ -41,12 +47,9 @@ fn main() {
     let vm = StatelessVM::new();
 
     let ret_1 = vm.fire(tx1, &mut bc);
-
     let addr_1 = bc.address("contract_0");
     let code = bc.code("contract_0");
-
     let params = vec![0x40,0x18,0xd9,0xaa,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0x12,0x34];
-
     let tx2 = Transaction::call(
         bc.address("alice"),
         addr_1,
@@ -61,7 +64,6 @@ fn main() {
     bc.commit();
 
     let params = vec![0x51,0x97,0xc7,0xaa];
-
     let tx3 = Transaction::call(
         bc.address("alice"),
         addr_1,
@@ -74,7 +76,4 @@ fn main() {
     let ret_3 = vm.fire(tx3, &mut bc);
 
     bc.commit();
-
-
-
 }
