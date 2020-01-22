@@ -1,10 +1,13 @@
-mod blockchain;
 
+#![feature(proc_macro_hygiene, decl_macro)]
+#[macro_use] extern crate rocket;
+use serde::{Serialize, Deserialize};
+mod blockchain;
+mod rpc;
 extern crate durian;
 #[macro_use]
 extern crate log;
 extern crate simple_logger;
-
 use blockchain::Blockchain;
 use durian::stateless_vm::StatelessVM;
 use durian::transaction::{Transaction, Action};
@@ -12,7 +15,6 @@ use ethereum_types::{Address, U256};
 use std::fs::File;
 use std::io::Read;
 use std::sync::Arc;
-mod rpc;
 
 
 
@@ -20,11 +22,13 @@ fn main() {
 
     simple_logger::init().unwrap();
     warn!("This is an example message.");
-
-    rpc::rpc_init();
-    // RpcImpl::main();
+    // rpc::start_rocket();
     let mut bc = Blockchain::new();
     let file_path = "./compiled-contract/pwasm_greeter.wasm";
+
+    // rpc::start_RestApi();
+    rpc::start_rpc();
+
 
     let mut file = match File::open(file_path) {
         Ok(file) => file,
@@ -76,4 +80,9 @@ fn main() {
     let ret_3 = vm.fire(tx3, &mut bc);
 
     bc.commit();
+
+
+
 }
+
+

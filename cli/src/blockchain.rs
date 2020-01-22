@@ -10,6 +10,7 @@ use serde::{Deserialize, Serialize};
 use sha3::{Digest, Keccak256};
 use std::collections::HashMap;
 use std::time::SystemTime;
+use jsonrpc_core::types::params::Params;
 
 pub type Hash = H256;
 
@@ -95,6 +96,10 @@ impl Blockchain {
                 break;
             }
         }
+    }
+
+    pub fn call_contract(& self, params: Params) {
+
     }
 }
 
