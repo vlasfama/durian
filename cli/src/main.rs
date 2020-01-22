@@ -1,10 +1,13 @@
-mod blockchain;
 
+#![feature(proc_macro_hygiene, decl_macro)]
+#[macro_use] extern crate rocket;
+use serde::{Serialize, Deserialize};
+mod blockchain;
+mod rpc;
 extern crate durian;
 #[macro_use]
 extern crate log;
 extern crate simple_logger;
-
 use blockchain::Blockchain;
 use durian::stateless_vm::StatelessVM;
 use durian::transaction::{Action, Transaction};
@@ -13,7 +16,6 @@ use log::Level;
 use std::fs::File;
 use std::io::Read;
 use std::sync::Arc;
-mod rpc;
 
 
 fn main() {
@@ -23,6 +25,10 @@ fn main() {
     // RpcImpl::main();
     let mut bc = Blockchain::new();
     let file_path = "./compiled-contract/pwasm_greeter.wasm";
+
+    // rpc::start_RestApi();
+    rpc::start_rpc();
+
 
     let mut file = match File::open(file_path) {
         Ok(file) => file,
@@ -78,4 +84,9 @@ fn main() {
     bc.incNonce("alice");
 
     bc.commit();
+
+
+
 }
+
+

@@ -12,6 +12,7 @@ use serde::{Deserialize, Serialize};
 use sha3::{Digest, Keccak256};
 use std::collections::HashMap;
 use time::PrimitiveDateTime;
+use jsonrpc_core::types::params::Params;
 
 pub type Hash = H256;
 

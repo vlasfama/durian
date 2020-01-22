@@ -1,0 +1,47 @@
+syntax = "proto3";
+package contract_deploy;
+
+service contract {
+    // Our Deploy in take contract to deployed and wriiten hash
+    rpc Deploy(DeployRequest) returns (DeployReply);
+    // Our call in take contract transaction to hash
+    rpc call_contract(callRequest) returns (callReply);
+}
+
+message DeployRequest {
+	bytes	code_hash =1;
+	bytes	address   =2;
+	bytes	sender    =3;
+	bytes	origin    =4;
+	uint64	gas       =5;
+	uint64	gas_price =6;
+	string	value=7;
+	bytes	code=8;
+	bytes	data=9;
+
+}
+message DeployReply {
+    // Reply contains the greeting message
+    string status = 1;
+    bytes hash = 2;
+}
+
+
+message callRequest {
+    // Request message contains the name to be greeted
+	bytes	code_hash =1;
+	bytes	address   =2;
+	bytes	sender    =3;
+	bytes	origin    =4;
+	uint64	gas       =5;
+	uint64	gas_price =6;
+	string	value=7;
+	bytes	code=8;
+	bytes	data=9;
+}
+
+message callReply {
+   // Reply contains the greeting message
+    string status = 1;
+    bytes hash = 2;
+}
