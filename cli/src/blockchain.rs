@@ -4,15 +4,16 @@ extern crate serde;
 extern crate serde_derive;
 extern crate sha3;
 
+use durian::transaction::{Transaction, Action};
 use durian::state_provider::{Error, StateAccount, StateProvider};
 use ethereum_types::{Address, H256, U256, U512};
 use serde::{Deserialize, Serialize};
 use sha3::{Digest, Keccak256};
 use std::collections::HashMap;
 use std::time::SystemTime;
-use jsonrpc_core::types::params::Params;
-
 pub type Hash = H256;
+use jsonrpc_http_server::jsonrpc_core::{Params};
+use serde_json::{json,Value};
 
 #[derive(Serialize, Deserialize, PartialEq, Debug)]
 pub struct Block {
@@ -98,10 +99,27 @@ impl Blockchain {
         }
     }
 
-    pub fn call_contract(& self, params: Params) {
+
+    pub fn call_contract(& mut self, contract_value: Params) {
+
+        let mut data : &str=
+        match contract_value {
+			Params::Array(ref vec) => vec[0].as_str().unwrap(),
+			Params::Map(map) => panic!("Invalid return data"),
+			Params::None => panic!("Invalid return data"),
+        };
+        let v: Value = serde_json::from_str(data).unwrap();
+        // let from = Blockchain::address(self,address);
+        // let tx1 = Transaction::create(from,U256::zero(),U256::from(10000000),code,vec![]);
+
 
     }
+
+
+
 }
+
+
 
 impl StateProvider for Blockchain {
     fn account(&self, address: &Address) -> Result<StateAccount, Error> {

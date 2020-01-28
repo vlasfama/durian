@@ -1,20 +1,16 @@
-
-use jsonrpc_http_server::jsonrpc_core::{IoHandler, Value, Params};
-use jsonrpc_http_server::{ServerBuilder,AccessControlAllowOrigin, DomainsValidation, RestApi,};
-use crate::blockchain::Blockchain;
-
-
+use crate::jsonrpc_core::*;
+use crate::{AccessControlAllowOrigin, DomainsValidation, RestApi, ServerBuilder};
+// use crate::{blockchain};
 
 //deploy the contract
 fn call_contract(params: Params){
-    let mut bc = Blockchain::new();
-    bc.call_contract(params);
-	// println!("enter the cal_contract {:?}",params)
+	println!("enter the cal_contract {:?}",params)
 }
 
 //iniit the rpc
-pub fn start_rpc(){
+pub fn main(){
 	let mut io = IoHandler::default();
+	io.add_method("say_hello", |_params: Params| Ok(Value::String("hello".to_string())));
     io.add_method("eth_sendTransaction", |_params: Params| {
 		call_contract(_params);
 		Ok(Value::String("hello".into()))
