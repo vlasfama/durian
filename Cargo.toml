@@ -38,3 +38,4 @@ git = "https://github.com/b00f/parity-ethereum.git"
 
 [lib]
 path = "src/lib.rs"
+

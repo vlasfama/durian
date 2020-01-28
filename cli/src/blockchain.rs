@@ -15,6 +15,8 @@ use time::PrimitiveDateTime;
 use jsonrpc_core::types::params::Params;
 
 pub type Hash = H256;
+use jsonrpc_http_server::jsonrpc_core::{Params};
+use serde_json::{json,Value};
 
 #[derive(Serialize, Deserialize, PartialEq, Debug)]
 pub struct Block {
@@ -108,7 +110,24 @@ impl Blockchain {
 
         Err(Error::InvalidAddress)
     }
+
+    pub fn call_contract(& mut self, contract_value: Params) {
+
+        let mut data : &str=
+        match contract_value {
+			Params::Array(ref vec) => vec[0].as_str().unwrap(),
+			Params::Map(map) => panic!("Invalid return data"),
+			Params::None => panic!("Invalid return data"),
+        };
+        let v: Value = serde_json::from_str(data).unwrap();
+        // let from = Blockchain::address(self,address);
+        // let tx1 = Transaction::create(from,U256::zero(),U256::from(10000000),code,vec![]);
+
+
+    }
 }
+
+
 
 impl StateProvider for Blockchain {
     fn account(&self, address: &Address) -> Result<StateAccount, Error> {
