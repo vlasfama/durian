@@ -29,7 +29,7 @@ fn main() {
 
 pub fn deploy(){
 
-    let file_path = "./compiled-contract/greeter.wasm";
+    let file_path = "./compiled-contract/pwasm_greeter.wasm";
 
     let mut file = match File::open(file_path) {
         Ok(file) => file,

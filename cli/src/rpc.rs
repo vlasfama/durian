@@ -12,7 +12,7 @@ fn call_contract(params: Params){
 	// println!("enter the cal_contract {:?}",params)
 }
 
-//iniit the rpc
+//init the rpc
 pub fn start_rpc(){
 	let mut io = IoHandler::default();
     io.add_method("eth_sendTransaction", |_params: Params| {

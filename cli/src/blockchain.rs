@@ -155,7 +155,7 @@ impl Blockchain {
         let ret_1 = vm.fire(tx1, self);
     }
 
-    // add the custom addres to blockchain instance.
+    // adding custom addres to blockchain instance.
     pub fn add_account() -> H160 {
         let from = "0x004ec07d2329997267ec62b4166639513386f32e";
         //let address_hex = from.trim_start_matches("0x");
