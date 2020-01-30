@@ -3,6 +3,7 @@ extern crate ethereum_types;
 extern crate serde;
 extern crate serde_derive;
 extern crate sha3;
+extern crate time;
 
 use durian::state_provider::{StateAccount, StateProvider};
 use durian::error::Error;
@@ -10,7 +11,7 @@ use ethereum_types::{Address, H256, U256, U512};
 use serde::{Deserialize, Serialize};
 use sha3::{Digest, Keccak256};
 use std::collections::HashMap;
-use std::time::SystemTime;
+use time::PrimitiveDateTime;
 
 pub type Hash = H256;
 
@@ -18,7 +19,7 @@ pub type Hash = H256;
 pub struct Block {
     num: u32,
     prev: Hash,
-    time: SystemTime,
+    time: PrimitiveDateTime,
 }
 
 #[derive(Debug)]
@@ -68,7 +69,20 @@ impl Blockchain {
     pub fn commit(&mut self) {
         let block = Block::new(self.blocks.len() as u32, self.blocks.last().unwrap().hash());
 
+        info!("Committing new block. num: {:?}, hash: {:?}", block.num, block.hash());
         self.blocks.push(block);
+
+        info!("Accounts:");
+        for (alias, acc) in self.accounts.iter() {
+            info!("  {:?}: address: {:?}, balance: {:?}, nonce:{:?}", alias, acc.address, acc.balance, acc.nonce);
+
+            if !acc.storage.is_empty() {
+                info!("  Storage:");
+                for (key, val) in acc.storage.iter() {
+                    info!("    {:?}: {:?}", key, val);
+                }
+            }
+        }
     }
 
     pub fn address(&self, alias: &str) -> Address {
@@ -77,6 +91,11 @@ impl Blockchain {
 
     pub fn code(&self, alias: &str) -> Vec<u8> {
         self.accounts.get(alias).unwrap().code.clone()
+    }
+
+    pub fn incNonce(& mut self, alias: &str) {
+        let mut acc  = self.accounts.get_mut(alias).unwrap();
+        acc.nonce = acc.nonce + U256::from(1)
     }
 
     fn account(&self, address: &Address) -> Result<&Account, Error> {
@@ -101,7 +120,7 @@ impl StateProvider for Blockchain {
     }
 
     fn create_contract(&mut self, address: Address, nonce: U256) {
-        let name = format!("contract_{}", self.counter);
+        let name = format!("contract_{}", self.counter+1);
         let mut acc = Account::new(address, U256::zero(), nonce);
         self.accounts.insert(name, acc);
 
@@ -150,7 +169,7 @@ impl Block {
         Block {
             num: num,
             prev: prev,
-            time: SystemTime::now(),
+            time: PrimitiveDateTime::now(),
         }
     }
 

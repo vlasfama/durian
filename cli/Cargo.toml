@@ -13,3 +13,4 @@ sha3 = "0.8.2"
 durian = { path = ".." }
 simple_logger = "1.4.0"
 log = "0.4"
+time = { version = "0.2", features = ["std", "serde"] }

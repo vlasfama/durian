@@ -35,7 +35,7 @@ pub struct StateCache<'a> {
 }
 
 impl<'a> StateCache<'a> {
-    pub fn new(provider: &'a mut StateProvider) -> Self {
+    pub fn new(provider: &'a mut dyn StateProvider) -> Self {
         StateCache {
             provider: provider,
             accounts: RefCell::new(HashMap::new()),
