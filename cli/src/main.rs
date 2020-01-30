@@ -2,7 +2,6 @@
 use serde::{Deserialize, Serialize};
 mod blockchain;
 extern crate durian;
-// extern crate rpc_durian;
 #[macro_use]
 extern crate log;
 extern crate simple_logger;
@@ -14,16 +13,23 @@ use log::Level;
 use std::fs::File;
 use std::io::Read;
 use std::sync::Arc;
-// use rpc_durian::{service};
 mod rpc;
+
+
 
 fn main() {
     simple_logger::init_with_level(Level::Info).unwrap();
 
     let mut bc = Blockchain::new();
-    let file_path = "./compiled-contract/greeter.wasm";
+    //start the rpc
+    rpc::start_rpc();
 
-    //  rpc::start_rpc();
+}
+
+
+pub fn deploy(){
+
+    let file_path = "./compiled-contract/greeter.wasm";
 
     let mut file = match File::open(file_path) {
         Ok(file) => file,
@@ -35,9 +41,7 @@ fn main() {
         panic!(err.to_string());
     }
 
-    println!("the value in greeter {:?}", code);
-
-    let tx1 = Transaction::create(
+      let tx1 = Transaction::create(
         bc.address("alice"),
         U256::zero(),
         U256::from(10000000),
@@ -81,4 +85,5 @@ fn main() {
     bc.incNonce("alice");
 
     bc.commit();
+
 }
