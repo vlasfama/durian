@@ -1,6 +1,5 @@
-
 #![feature(proc_macro_hygiene, decl_macro)]
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 mod blockchain;
 extern crate durian;
 // extern crate rpc_durian;
@@ -9,7 +8,7 @@ extern crate log;
 extern crate simple_logger;
 use blockchain::Blockchain;
 use durian::stateless_vm::StatelessVM;
-use durian::transaction::{Transaction, Action};
+use durian::transaction::{Action, Transaction};
 use ethereum_types::{Address, U256};
 use std::fs::File;
 use std::io::Read;
@@ -18,15 +17,12 @@ use std::sync::Arc;
 mod rpc;
 
 fn main() {
-
     // simple_logger::init().unwrap();
     // rpc::start_rocket();
     let mut bc = Blockchain::new();
-    let file_path = "./compiled-contract/pwasm_greeter.wasm";
-    // rpc::start_RestApi();
+    let file_path = "./compiled-contract/greeter.wasm";
 
-    // rpc_durian::service::rpc_server::start_rpc();
-    rpc::start_rpc();
+    //  rpc::start_rpc();
 
     let mut file = match File::open(file_path) {
         Ok(file) => file,
@@ -37,6 +33,8 @@ fn main() {
     if let Err(err) = file.read_to_end(&mut code) {
         panic!(err.to_string());
     }
+
+    println!("the value in greeter {:?}", code);
 
     let tx1 = Transaction::create(
         bc.address("alice"),
@@ -52,7 +50,10 @@ fn main() {
 
     let addr_1 = bc.address("contract_0");
     let code = bc.code("contract_0");
-    let params = vec![0x40,0x18,0xd9,0xaa,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0x12,0x34];
+    let params = vec![
+        0x40, 0x18, 0xd9, 0xaa, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0x12, 0x34,
+    ];
     let tx2 = Transaction::call(
         bc.address("alice"),
         addr_1,
@@ -66,7 +67,7 @@ fn main() {
 
     bc.commit();
 
-    let params = vec![0x51,0x97,0xc7,0xaa];
+    let params = vec![0x51, 0x97, 0xc7, 0xaa];
     let tx3 = Transaction::call(
         bc.address("alice"),
         addr_1,
@@ -79,9 +80,4 @@ fn main() {
     let ret_3 = vm.fire(tx3, &mut bc);
 
     bc.commit();
-
-
-
 }
-
-
