@@ -1,6 +1,5 @@
-
 #![feature(proc_macro_hygiene, decl_macro)]
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 mod blockchain;
 extern crate durian;
 // extern crate rpc_durian;
@@ -22,11 +21,9 @@ fn main() {
     simple_logger::init_with_level(Level::Info).unwrap();
 
     let mut bc = Blockchain::new();
-    let file_path = "./compiled-contract/pwasm_greeter.wasm";
-    // rpc::start_RestApi();
+    let file_path = "./compiled-contract/greeter.wasm";
 
-    // rpc_durian::service::rpc_server::start_rpc();
-    rpc::start_rpc();
+    //  rpc::start_rpc();
 
     let mut file = match File::open(file_path) {
         Ok(file) => file,
@@ -37,6 +34,8 @@ fn main() {
     if let Err(err) = file.read_to_end(&mut code) {
         panic!(err.to_string());
     }
+
+    println!("the value in greeter {:?}", code);
 
     let tx1 = Transaction::create(
         bc.address("alice"),
@@ -82,9 +81,4 @@ fn main() {
     bc.incNonce("alice");
 
     bc.commit();
-
-
-
 }
-
-
