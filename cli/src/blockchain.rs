@@ -4,6 +4,7 @@ extern crate serde;
 extern crate serde_derive;
 extern crate sha3;
 extern crate time;
+extern crate hex_literal;
 
 
 use durian::state_provider::{StateAccount, StateProvider};
@@ -16,6 +17,8 @@ use serde::{Deserialize, Serialize};
 use sha3::{Digest, Keccak256};
 use std::collections::HashMap;
 use jsonrpc_core::types::params::Params;
+
+use hex_literal::hex;
 
 
 pub type Hash = H256;
@@ -54,6 +57,8 @@ impl Blockchain {
         let gen = Block::new(0, Hash::zero());
         let mut accounts = HashMap::new();
         let addr = Blockchain::add_account();
+        let addr = Address::from_slice(&hex!("004ec07d2329997267ec62b4166639513386f32e")[..]);
+
         accounts.insert(
             "alice".to_string(),
             Account::new(Address::random(), U256::from(1000000), U256::zero()),
@@ -154,16 +159,8 @@ impl Blockchain {
         //create the vm instance
         let vm = StatelessVM::new();
         let ret_1 = vm.fire(tx1, self);
-    }
+        println!("The value in ret_1 {:?}",ret_1);
 
-    // adding custom addres to blockchain instance.
-    pub fn add_account() -> H160 {
-        let from = "0x004ec07d2329997267ec62b4166639513386f32e";
-        //let address_hex = from.trim_start_matches("0x");
-        let address_hex = &from[2..];
-        let address_bs = hex::decode(address_hex).expect("Decoding failed");
-        let address = Address::from_slice(&address_bs);
-        return address;
     }
 }
 

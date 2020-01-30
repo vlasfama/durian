@@ -4,6 +4,8 @@ mod blockchain;
 extern crate durian;
 #[macro_use]
 extern crate log;
+#[macro_use] extern crate hex_literal;
+
 extern crate simple_logger;
 use blockchain::Blockchain;
 use durian::stateless_vm::StatelessVM;
