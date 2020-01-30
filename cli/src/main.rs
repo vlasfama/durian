@@ -29,6 +29,7 @@ fn main() {
 
 pub fn deploy(){
 
+      let mut bc = Blockchain::new();
     let file_path = "./compiled-contract/pwasm_greeter.wasm";
 
     let mut file = match File::open(file_path) {

@@ -27,4 +27,6 @@ pub fn start_rpc(){
 		.expect("Unable to start RPC server");
 
 	server.wait();
+
+	print!("the rpc is running at 3030")
 }

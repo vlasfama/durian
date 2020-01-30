@@ -1,6 +1,5 @@
 extern crate bincode;
 extern crate ethereum_types;
-extern crate hex;
 extern crate serde;
 extern crate serde_derive;
 extern crate sha3;
@@ -8,11 +7,13 @@ extern crate time;
 
 use durian::state_provider::{StateAccount, StateProvider};
 use durian::error::Error;
+use time::PrimitiveDateTime;
+use bytes::Bytes;
 use ethereum_types::{Address, H160, H256, U256, U512};
+use durian::transaction::{Action, Transaction};
 use serde::{Deserialize, Serialize};
 use sha3::{Digest, Keccak256};
 use std::collections::HashMap;
-use time::PrimitiveDateTime;
 use jsonrpc_core::types::params::Params;
 
 pub type Hash = H256;
@@ -20,9 +21,7 @@ use jsonrpc_http_server::jsonrpc_core::Params;
 use serde_json::{json, Value};
 use std::fmt;
 use std::fmt::Formatter;
-extern crate hex_slice;
 use durian::stateless_vm::StatelessVM;
-use hex_slice::AsHex;
 use std::convert::TryFrom;
 
 #[derive(Serialize, Deserialize, PartialEq, Debug)]
