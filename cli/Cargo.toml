@@ -28,7 +28,8 @@ jsonrpc-server-utils = "14.0.5"
 hex = "0.4.0"
 hex-slice = "0.1.4"
 bytes = "0.5.4"
-time = { version = "0.2", features = ["std", "serde"] }
+hex-literal = "0.2.1"
+
 
 
 [build-dependencies]
