@@ -2,7 +2,6 @@
 use serde::{Deserialize, Serialize};
 mod blockchain;
 extern crate durian;
-// extern crate rpc_durian;
 #[macro_use]
 extern crate log;
 extern crate simple_logger;
@@ -13,16 +12,23 @@ use ethereum_types::{Address, U256};
 use std::fs::File;
 use std::io::Read;
 use std::sync::Arc;
-// use rpc_durian::{service};
 mod rpc;
 
-fn main() {
-    // simple_logger::init().unwrap();
-    // rpc::start_rocket();
-    let mut bc = Blockchain::new();
-    let file_path = "./compiled-contract/greeter.wasm";
 
-    //  rpc::start_rpc();
+
+fn main() {
+
+    //create the blockchain instance
+    let mut bc = Blockchain::new();
+    //start the rpc
+    rpc::start_rpc();
+
+}
+
+
+pub fn deploy(){
+
+    let file_path = "./compiled-contract/greeter.wasm";
 
     let mut file = match File::open(file_path) {
         Ok(file) => file,
@@ -34,9 +40,7 @@ fn main() {
         panic!(err.to_string());
     }
 
-    println!("the value in greeter {:?}", code);
-
-    let tx1 = Transaction::create(
+      let tx1 = Transaction::create(
         bc.address("alice"),
         U256::zero(),
         U256::from(10000000),
@@ -45,7 +49,6 @@ fn main() {
     );
 
     let vm = StatelessVM::new();
-
     let ret_1 = vm.fire(tx1, &mut bc);
 
     let addr_1 = bc.address("contract_0");
@@ -78,6 +81,6 @@ fn main() {
     );
 
     let ret_3 = vm.fire(tx3, &mut bc);
-
     bc.commit();
+
 }

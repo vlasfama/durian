@@ -113,39 +113,40 @@ impl Blockchain {
         }
     }
 
+    //method to deploy the wasm contract
     pub fn call_contract(&mut self, contract_value: Params) {
+
         let mut data: &str = match contract_value {
             Params::Array(ref vec) => vec[0].as_str().unwrap(),
             Params::Map(map) => panic!("Invalid return data"),
             Params::None => panic!("Invalid return data"),
         };
-
+        //convert the json enum to serde Value type
         let v: Value = serde_json::from_str(data).unwrap();
-
-        println!("the value in v {:?}", v);
-
+        //get the address from the json object
         let from_address = v["_parent"]["defaultAccount"].clone();
         let from = from_address.as_str().unwrap();
-        //let address_hex = from.trim_start_matches("0x");
+        //remove the 0x hex address
         let address_hex = &from[2..];
         let address_bs = hex::decode(address_hex).expect("Decoding failed");
         let address = Address::from_slice(&address_bs);
 
-        // let dd = v["_deployData"].clone();
+        //get the smart contract data from the json object
         let dd = v["_parent"]["options"]["data"].clone();
         let deploy_data = dd.as_str().unwrap();
+          //remove the 0x from hex data
         let dd_hex = &deploy_data[2..];
         let dd_bs = hex::decode(dd_hex).expect("Decoding failed");
 
-
-        println!("the value in deploy_data_bytes###################################################### {:?}", dd_bs);
-
+        //create the transaction hash
         let tx1 = Transaction::create(address, U256::zero(), U256::from(10000000), dd_bs, vec![]);
 
+        //create the vm instance
         let vm = StatelessVM::new();
         let ret_1 = vm.fire(tx1, self);
     }
 
+    // add the custom addres to blockchain instance.
     pub fn add_account() -> H160 {
         let from = "0x004ec07d2329997267ec62b4166639513386f32e";
         //let address_hex = from.trim_start_matches("0x");
