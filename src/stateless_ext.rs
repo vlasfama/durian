@@ -1,22 +1,16 @@
-use std::{sync::Arc};
 use ethereum_types::{Address, H256, U256};
+use machine::{externalities::OutputPolicy, substate::Substate, Machine};
 use parity_bytes::Bytes;
-use machine::{
-    externalities::{OutputPolicy},
-    substate::Substate,
-    Machine,
-};
 use state_cache::StateCache;
+use state_provider::StateProvider;
+use std::sync::Arc;
 use trace::{Tracer, VMTracer};
 use vm::{
-    self, CallType, ContractCreateResult, ActionParams, CreateContractAddress,
-    EnvInfo, Ext, MessageCallResult, ReturnData, Schedule, TrapKind,
+    self, ActionParams, CallType, ContractCreateResult, CreateContractAddress, EnvInfo, Ext,
+    MessageCallResult, ReturnData, Schedule, TrapKind,
 };
-use state_provider::StateProvider;
 
-
-
-pub struct StatelessExt<'a/*, T: 'a, V: 'a, S:'a*/> {
+pub struct StatelessExt<'a /*, T: 'a, V: 'a, S:'a*/> {
     env_info: &'a EnvInfo,
     //depth: usize,
     //stack_depth: usize,
@@ -29,11 +23,11 @@ pub struct StatelessExt<'a/*, T: 'a, V: 'a, S:'a*/> {
     //vm_tracer: &'a mut V,
     //state_provider: &'a S,
     //static_flag: bool,
-  //  storageProvider: StateProvider;
-    cache:  StateCache<'a>,
+    //  storageProvider: StateProvider;
+    cache: StateCache<'a>,
 }
 
-impl<'a/*, T: 'a, V: 'a, S: 'a*/> StatelessExt<'a/*, T, V, S*/>
+impl<'a /*, T: 'a, V: 'a, S: 'a*/> StatelessExt<'a /*, T, V, S*/>
 /*where
     T: Tracer,
     V: VMTracer,
@@ -46,7 +40,7 @@ impl<'a/*, T: 'a, V: 'a, S: 'a*/> StatelessExt<'a/*, T, V, S*/>
         schedule: &'a Schedule,
         //depth: usize,
         //stack_depth: usize,
-		params: &'a ActionParams,
+        params: &'a ActionParams,
         //substate: &'a mut Substate,
         //output: OutputPolicy,
         //tracer: &'a mut T,
@@ -54,7 +48,6 @@ impl<'a/*, T: 'a, V: 'a, S: 'a*/> StatelessExt<'a/*, T, V, S*/>
         provider: &'a mut dyn StateProvider,
         //static_flag: bool,
     ) -> Self {
-
         let mut cache = StateCache::new(provider);
 
         StatelessExt {
@@ -72,11 +65,9 @@ impl<'a/*, T: 'a, V: 'a, S: 'a*/> StatelessExt<'a/*, T, V, S*/>
             cache,
         }
     }
-
 }
 
-impl<'a> Ext for StatelessExt<'a>
-{
+impl<'a> Ext for StatelessExt<'a> {
     fn initial_storage_at(&self, key: &H256) -> vm::Result<H256> {
         println!("hello");
         /*if self.state.is_base_storage_root_unchanged(&self.origin_info.address)? {
@@ -90,7 +81,9 @@ impl<'a> Ext for StatelessExt<'a>
     }
 
     fn storage_at(&self, key: &H256) -> vm::Result<H256> {
-        self.cache.storage_at(&self.params.address, key).map_err(Into::into)
+        self.cache
+            .storage_at(&self.params.address, key)
+            .map_err(Into::into)
     }
 
     fn set_storage(&mut self, key: H256, value: H256) -> vm::Result<()> {
@@ -212,7 +205,7 @@ impl<'a> Ext for StatelessExt<'a>
     fn trace_next_instruction(&mut self, pc: usize, instruction: u8, current_gas: U256) -> bool {
         //self.vm_tracer
         //    .trace_next_instruction(pc, instruction, current_gas)
-    true
+        true
     }
 
     fn trace_prepare_execute(
@@ -239,6 +232,4 @@ impl<'a> Ext for StatelessExt<'a>
         //return self.static_flag;
         return false;
     }
-
-
 }
