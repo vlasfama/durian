@@ -6,35 +6,14 @@ edition = "2018"
 
 
 [dependencies]
-ethereum-types = "0.8.0"
-bincode = "1.2.0"
-serde = { version = "1.0", features = ["derive"] }
-sha3 = "0.8.2"
 durian = { path = ".." }
 simple_logger = "1.4.0"
 log = "0.4"
 time = { version = "0.2", features = ["std", "serde"] }
-jsonrpc-client-core = "0.5.0"
-jsonrpc_client = "0.2.0"
-serde_json = { version = "1.0", features = ["arbitrary_precision"]}
-serde_derive = "1.0.104"
-chrono = { version = "0.3", features = ["serde"] }
-rustc-hex = "1.0"
-tonic = "0.1"
-prost = "0.6"
-jsonrpc-core = "14.0.5"
-jsonrpc-http-server = "14.0.5"
-jsonrpc-server-utils = "14.0.5"
-hex = "0.4.0"
-hex-slice = "0.1.4"
-bytes = "0.5.4"
 hex-literal = "0.2.1"
-
-
+web3 = {path="../web3"}
+blockchain = {path= "../blockchain"}
 
 [build-dependencies]
 tonic-build = "0.1.0"
 
-
-[features]
-arbitrary_precision = ["serde_json/arbitrary_precision"]
