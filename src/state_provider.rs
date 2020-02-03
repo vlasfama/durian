@@ -1,5 +1,5 @@
-use ethereum_types::{Address, H256, U256, U512};
 use error::Error;
+use ethereum_types::{Address, H256, U256, U512};
 
 pub struct StateAccount {
     pub nonce: U256,

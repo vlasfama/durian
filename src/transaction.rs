@@ -1,13 +1,11 @@
 use ethereum_types::{Address, U256};
 use parity_bytes::Bytes;
 
-
 #[derive(Debug, Clone, PartialEq)]
 pub enum Action {
-	Create,
+    Create,
     Call(Address),
 }
-
 
 #[derive(Debug)]
 pub struct Transaction {
@@ -19,15 +17,8 @@ pub struct Transaction {
     pub params: Bytes,
 }
 
-
 impl Transaction {
-    pub fn create(
-        sender: Address,
-        value: U256,
-        gas: U256,
-        code: Bytes,
-        params: Bytes,
-    ) -> Self {
+    pub fn create(sender: Address, value: U256, gas: U256, code: Bytes, params: Bytes) -> Self {
         Transaction {
             action: Action::Create,
             sender,
@@ -55,5 +46,4 @@ impl Transaction {
             params,
         }
     }
-
 }
