@@ -13,7 +13,3 @@ time = { version = "0.2", features = ["std", "serde"] }
 hex-literal = "0.2.1"
 web3 = {path="../web3"}
 blockchain = {path= "../blockchain"}
-
-[build-dependencies]
-tonic-build = "0.1.0"
-

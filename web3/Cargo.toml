@@ -7,5 +7,21 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-jsonrpc-http-server = "14.0.5"
 blockchain = {path = "../blockchain"}
+
+jsonrpc-core = "14.0.5"
+jsonrpc-derive = "14.0.5"
+jsonrpc-http-server = "14.0.5"
+jsonrpc-core-client = "14.0.5"
+
+hyper = "0.13"
+tokio = { version = "0.2", features = ["full"] }
+futures = "0.3.3"
+log = "0.4"
+simple_logger = "1.4.0"
+ethereum-types = "0.8.0"
+serde = "1.0"
+serde_derive = "1.0"
+serde_json = "1.0"
+rustc-hex = "1.0"
+ansi_term = "0.11"

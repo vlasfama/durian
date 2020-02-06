@@ -3,7 +3,7 @@
 extern crate log;
 #[macro_use] extern crate hex_literal;
 extern crate web3;
-use web3::rpc;
+use web3::rpc_server;
 extern crate simple_logger;
 use log::Level;
 use std::fs::File;
@@ -13,7 +13,9 @@ use std::sync::Arc;
 
 fn main() {
     simple_logger::init_with_level(Level::Info).unwrap();
-    rpc::start_rpc();
+   // rpc::start_rpc();
+   let config = rpc_server::HttpConfiguration::with_port(123);
+   let _rpc_server = rpc_server::new_http(config);
 }
 
 // pub fn deploy(){
