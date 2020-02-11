@@ -1,38 +1,174 @@
-use blockchain;
-use blockchain::blockchain::Blockchain;
-use jsonrpc_http_server::jsonrpc_core::{IoHandler, Params, Value};
-// use jsonrpc_http_server::{AccessControlAllowOrigin, DomainsValidation, RestApi, ServerBuilder};
-// use jsonrpc_core as rpc;
-// use jsonrpc_http_server as http;
+use crate::rpc_apis::{self, Api, ApiSet};
+use crate::rpc_service::{self as rpc, start_http};
+use crate::v1::extractors;
+use extractors::{RpcExtractor as rpcext};
+use jsonrpc_core::{Compatibility, MetaIoHandler};
+pub use jsonrpc_http_server::{DomainsValidation, Server};
+use std::collections::HashSet;
+use std::io;
+use std::net::SocketAddr;
+use std::sync::Arc;
 
-// //deploy the contract
-fn call_contract(params: Params) {
-	let mut bc = Blockchain::new();
-	bc.call_contract(params);
+/// RPC HTTP Server instance
+pub type HttpServer = http::Server;
+pub const DAPPS_DOMAIN: &'static str = "web3.site";
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct HttpConfiguration {
+	/// Is RPC over HTTP enabled (default is true)?
+	pub enabled: bool,
+	/// The IP of the network interface used (default is 127.0.0.1).
+	pub interface: String,
+	/// The network port (default is 8545).
+	pub port: u16,
+	/// The categories of RPC calls enabled.
+	pub apis: ApiSet,
+	/// CORS headers
+	pub cors: Option<Vec<String>>,
+	/// Specify a list of valid hosts we accept requests from.
+	pub hosts: Option<Vec<String>>,
+	/// Number of HTTP server threads to use to handle incoming requests (default is 4).
+	pub server_threads: usize,
+	/// Sets the maximum size of a request body in megabytes (default is 5 MiB).
+	pub max_payload: usize,
+	/// Use keepalive messages on the underlying socket: SO_KEEPALIVE as well as the TCP_KEEPALIVE
+	/// or TCP_KEEPIDLE options depending on your platform (default is true).
+	pub keep_alive: bool,
 }
 
-use hyper::service::{make_service_fn, service_fn};
-use hyper::{Body, Request, Response, Server};
-///Hyper
-use std::convert::Infallible;
-
-async fn eth_gasPrice(params: Request<Body>) -> Result<Response<Body>, Infallible> {
-	println!("the request body {:?}", params);
-	// jsonvalue =
-	Ok(Response::new(Body::from("{id:1,jsonrpc:2.0,result:0x0}")))
+impl Default for HttpConfiguration {
+	fn default() -> Self {
+		HttpConfiguration {
+			enabled: true,
+			interface: "127.0.0.1".into(),
+			port: 8545,
+			apis: ApiSet::default(),
+			cors: Some(vec![]),
+			hosts: Some(vec![]),
+			server_threads: 4,
+			max_payload: 5,
+			keep_alive: true,
+		}
+	}
 }
 
-async fn eth_sendTransaction(params: Request<Body>) -> Result<Response<Body>, Infallible> {
-	println!("the request body {:?}", params);
-	Ok(Response::new(Body::from("Hello World!")))
+pub fn new_http(
+	id: &str,
+	options: &str,
+	conf: HttpConfiguration,
+) -> Result<Option<HttpServer>, String> {
+	if !conf.enabled {
+		return Ok(None);
+	}
+	let domain = DAPPS_DOMAIN;
+	let url = format!("{}:{}", conf.interface, conf.port);
+	let addr = url
+		.parse()
+		.map_err(|_| format!("Invalid {} listen host/port given: {}", id, url))?;
+	let handler = rpc_apis::setup_rpc(
+		MetaIoHandler::with_compatibility(Compatibility::Both),
+		conf.apis,
+	);
+
+	let cors_domains = into_domains(conf.cors);
+	let allowed_hosts = into_domains(with_domain(conf.hosts, domain, &Some(url.clone().into())));
+
+	let start_result = start_http(&addr,cors_domains,
+		allowed_hosts,
+		handler,
+		rpcext,
+		conf.server_threads,
+		conf.max_payload,
+		conf.keep_alive,
+	);
+	match start_result {
+		Ok(server) => Ok(Some(server)),
+		Err(ref err) if err.kind() == io::ErrorKind::AddrInUse => Err(
+			format!("{} address {} is already in use, make sure that another instance of an Ethereum client is not running or change the address using the --{}-port and --{}-interface options.", id, url, options, options)
+		),
+		Err(e) => Err(format!("{} error: {:?}", id, e)),
+	}
 }
 
-#[tokio::main]
-pub async fn start_rpc() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-	let make_svc = make_service_fn(|_conn| async { Ok::<_, Infallible>(service_fn(eth_gasPrice)) });
-	let addr = ([127, 0, 0, 1], 3030).into();
-	let server = Server::bind(&addr).serve(make_svc);
-	println!("Listening on http://{}", addr);
-	server.await?;
-	Ok(())
+fn setup_rpc_server(apis: ApiSet) -> MetaIoHandler<()> {
+	rpc_apis::setup_rpc(MetaIoHandler::with_compatibility(Compatibility::Both), apis)
 }
+
+fn into_domains<T: From<String>>(items: Option<Vec<String>>) -> DomainsValidation<T> {
+	items
+		.map(|vals| vals.into_iter().map(T::from).collect())
+		.into()
+}
+
+fn with_domain(
+	items: Option<Vec<String>>,
+	domain: &str,
+	dapps_address: &Option<rpc::Host>,
+) -> Option<Vec<String>> {
+	fn extract_port(s: &str) -> Option<u16> {
+		s.split(':').nth(1).and_then(|s| s.parse().ok())
+	}
+
+	items.map(move |items| {
+		let mut items = items.into_iter().collect::<HashSet<_>>();
+		{
+			let mut add_hosts = |address: &Option<rpc::Host>| {
+				if let Some(host) = address.clone() {
+					items.insert(host.to_string());
+					items.insert(host.replace("127.0.0.1", "localhost"));
+					items.insert(format!("http://*.{}", domain)); //proxypac
+					if let Some(port) = extract_port(&*host) {
+						items.insert(format!("http://*.{}:{}", domain, port));
+					}
+				}
+			};
+
+			add_hosts(dapps_address);
+		}
+		items.into_iter().collect()
+	})
+}
+
+// impl HttpConfiguration {
+// 	pub fn with_port(port: u16) -> Self {
+// 		HttpConfiguration {
+// 			enabled: true,
+// 			interface: "127.0.0.1".into(),
+// 			port: port,
+// 			apis: ApiSet::default(),
+// 			cors: None,
+// 			hosts: Some(Vec::new()),
+// 		}
+// 	}
+// }
+
+// pub fn new_http(conf: HttpConfiguration) -> Result<Option<Server>, String> {
+// 	if !conf.enabled {
+// 		return Ok(None);
+// 	}
+// 	let url = format!("{}:{}", conf.interface, conf.port);
+// 	let addr = (url
+// 		.parse()
+// 		.map_err(|_| format!("Invalid JSONRPC listen host/port given: {}", url))?);
+// 	println!("print the api {:?}", conf.apis);
+// 	Ok(Some(
+// 		(setup_http_rpc_server(&addr, conf.cors, conf.hosts, conf.apis))?,
+// 	))
+// }
+
+// pub fn setup_http_rpc_server(
+// 	url: &SocketAddr,
+// 	cors_domains: Option<Vec<String>>,
+// 	allowed_hosts: Option<Vec<String>>,
+// 	apis: ApiSet,
+// ) -> Result<Server, String> {
+// 	let server = setup_rpc_server(apis);
+// 	let start_result = start_http(url, cors_domains, allowed_hosts, server);
+// 	match start_result {
+// 		Err(ref err) if err.kind() == io::ErrorKind::AddrInUse => {
+// 			Err(format!("RPC address {} is already in use, make sure that another instance of a Bitcoin node is not running or change the address using the --jsonrpc-port and --jsonrpc-interface options.", url))
+// 		},
+// 		Err(e) => Err(format!("RPC error: {:?}", e)),
+// 		Ok(server) => Ok(server),
+// 	}
+// }
