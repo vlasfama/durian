@@ -94,11 +94,12 @@ impl StatelessVM {
         let builtins = BTreeMap::default();
         let machine = Machine::regular(machine_params, builtins);
         let mut schedule = machine.schedule(env_info.number);
+        let depth = 0;
 
         let wasm = vm::WasmCosts::default();
         schedule.wasm = Some(wasm);
 
-        let mut ext = StatelessExt::new(&env_info, &machine, &schedule, &params, provider);
+        let mut ext = StatelessExt::new(&env_info, &machine, &schedule, depth, &params, provider);
 
         let interpreter = Box::new(WasmInterpreter::new(params.clone()));
 

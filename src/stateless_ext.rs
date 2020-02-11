@@ -10,9 +10,12 @@ use vm::{
     MessageCallResult, ReturnData, Schedule, TrapKind,
 };
 
-pub struct StatelessExt<'a /*, T: 'a, V: 'a, S:'a*/> {
+pub struct StatelessExt<'a, SP: 'a>
+where
+    SP: StateProvider,
+{
     env_info: &'a EnvInfo,
-    //depth: usize,
+    depth: usize,
     //stack_depth: usize,
     params: &'a ActionParams,
     //substate: &'a mut Substate,
@@ -24,35 +27,32 @@ pub struct StatelessExt<'a /*, T: 'a, V: 'a, S:'a*/> {
     //state_provider: &'a S,
     //static_flag: bool,
     //  storageProvider: StateProvider;
-    cache: StateCache<'a>,
+    cache: StateCache<'a, SP>,
 }
 
-impl<'a /*, T: 'a, V: 'a, S: 'a*/> StatelessExt<'a /*, T, V, S*/>
-/*where
-    T: Tracer,
-    V: VMTracer,
-    S: StateProvider,
-*/
+impl<'a, SP: 'a> StatelessExt<'a, SP>
+where
+    SP: StateProvider,
 {
     pub fn new(
         env_info: &'a EnvInfo,
         machine: &'a Machine,
         schedule: &'a Schedule,
-        //depth: usize,
+        depth: usize,
         //stack_depth: usize,
         params: &'a ActionParams,
         //substate: &'a mut Substate,
         //output: OutputPolicy,
         //tracer: &'a mut T,
         //vm_tracer: &'a mut V,
-        provider: &'a mut dyn StateProvider,
+        provider: &'a mut SP,
         //static_flag: bool,
     ) -> Self {
-        let mut cache = StateCache::new(provider);
+        let cache = StateCache::new(provider);
 
         StatelessExt {
             env_info,
-            //depth,
+            depth,
             //stack_depth,
             params,
             //substate,
@@ -67,7 +67,10 @@ impl<'a /*, T: 'a, V: 'a, S: 'a*/> StatelessExt<'a /*, T, V, S*/>
     }
 }
 
-impl<'a> Ext for StatelessExt<'a> {
+impl<'a, SP: 'a> Ext for StatelessExt<'a, SP>
+where
+    SP: StateProvider,
+{
     fn initial_storage_at(&self, key: &H256) -> vm::Result<H256> {
         println!("hello");
         /*if self.state.is_base_storage_root_unchanged(&self.origin_info.address)? {
@@ -81,9 +84,10 @@ impl<'a> Ext for StatelessExt<'a> {
     }
 
     fn storage_at(&self, key: &H256) -> vm::Result<H256> {
-        self.cache
-            .storage_at(&self.params.address, key)
-            .map_err(Into::into)
+        // self.cache
+        //     .storage_at(&self.params.address, key)
+        //     .map_err(Into::into)
+        Ok(H256::zero())
     }
 
     fn set_storage(&mut self, key: H256, value: H256) -> vm::Result<()> {
@@ -190,8 +194,7 @@ impl<'a> Ext for StatelessExt<'a> {
     }
 
     fn depth(&self) -> usize {
-        //self.depth
-        1
+        self.depth
     }
 
     fn add_sstore_refund(&mut self, value: usize) {

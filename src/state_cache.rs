@@ -1,20 +1,13 @@
 use ethereum_types::{Address, H256, U256, U512};
-use state_provider::{StateAccount, StateProvider};
-use std::{
-    cell::{RefCell, RefMut},
-    collections::hash_map::Entry,
-    collections::{BTreeMap, BTreeSet, HashMap, HashSet},
-    fmt,
-    sync::Arc,
-};
+use state_provider::StateProvider;
+use std::collections::HashMap;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 struct AccountInfo {
     nonce: U256,
     balance: U256,
     code: Vec<u8>,
-    changed: bool,
-    storage: HashMap<H256, H256>,
+    storage: HashMap<H256, (H256, bool)>,
 }
 
 impl AccountInfo {
@@ -23,34 +16,33 @@ impl AccountInfo {
             nonce,
             balance,
             code,
-            changed: false,
             storage: HashMap::new(),
         }
     }
 }
 
-pub struct StateCache<'a> {
-    provider: &'a mut StateProvider,
-    accounts: RefCell<HashMap<Address, AccountInfo>>,
+pub struct StateCache<'a, T: StateProvider> {
+    provider: &'a mut T,
+    accounts: HashMap<Address, (AccountInfo, bool)>,
 }
 
-impl<'a> StateCache<'a> {
-    pub fn new(provider: &'a mut dyn StateProvider) -> Self {
+impl<'a, T> StateCache<'a, T>
+where
+    T: StateProvider,
+{
+    pub fn new(provider: &'a mut T) -> Self {
         StateCache {
             provider: provider,
-            accounts: RefCell::new(HashMap::new()),
+            accounts: HashMap::new(),
         }
     }
 
     ///
     pub fn create_contract(&mut self, address: Address, nonce: U256) {
-        // TODO
-        let mut acc = AccountInfo::new(U256::zero(), nonce, vec![]);
-        acc.changed = true;
-        /// TODO
-        let _ret = self.accounts.get_mut().insert(address, acc);
+        let acc = AccountInfo::new(U256::zero(), nonce, vec![]);
+        let ret = self.accounts.insert(address, (acc, true));
 
-        self.provider.create_contract(address, nonce);
+        assert_eq!(ret, None);
     }
 
     pub fn nonce(&mut self, address: &Address) -> vm::Result<U256> {
@@ -63,79 +55,73 @@ impl<'a> StateCache<'a> {
         Ok(acc.balance)
     }
 
-    pub fn storage_at(&self, address: &Address, key: &H256) -> vm::Result<H256> {
+    pub fn storage_at(&mut self, address: &Address, key: &H256) -> vm::Result<H256> {
+        self.fetch_storage(address, key)?;
+
         let acc = self.account(address)?;
-        if let Some(storage) = acc.storage.get(key) {
-            return Ok(*storage);
-        } else {
-            //// TODO
-            /// let storage = self.provider.storage_at(address, key)?;
-            let storage = self
-                .provider
-                .storage_at(address, key)
-                .unwrap_or(H256::zero());
-            return Ok(storage);
-        }
+        return Ok(acc.storage.get(key).unwrap().0);
     }
 
     pub fn set_storage(&mut self, address: &Address, key: &H256, value: &H256) {
-        let mut acc = self.account(address).unwrap();
-        let val = acc.storage.entry(*key).or_insert(*value);
-        *val = *value;
-
-        /// TEMP
-        self.provider.set_storage(address, key, value);
+        let acc = self.account_mut(address).unwrap();
+        acc.0.storage.insert(*key, (*value, true));
     }
 
-    pub fn blockhash(&self, num: i64) -> U512 {
+    pub fn blockhash(&self, _num: i64) -> U512 {
         U512::zero()
     }
 
-    pub fn exist(&self, address: Address) -> bool {
+    pub fn exist(&self, _address: Address) -> bool {
         false
     }
 
-    /*
-    TODO
-    fn account(&mut self, address: &Address) -> Option<&Account> {
-        if let Some(acc) = self.accounts.get(address) {
-            Some(acc)
-        } else {
-            if let Some(acc) = self.provider.account(*address) {
-                let acc = Account::new(acc.balance, acc.nonce, acc.code);
-                let _ret = self.accounts.insert(*address, acc);
+    fn account_mut(&mut self, address: &Address) -> vm::Result<&mut (AccountInfo, bool)> {
+        self.fetch_account(address)?;
 
-                // TODO: check _ret
-                None//self.account(address)
-            } else {
-                None
-            }
-        }
+        return Ok(self.accounts.get_mut(address).unwrap());
     }
-    */
 
-    fn account(&self, address: &Address) -> vm::Result<AccountInfo> {
-        let mut accs = self.accounts.borrow_mut();
-        if let Some(acc) = accs.get(address) {
-            Ok(acc.clone())
-        } else {
-            if let Ok(acc) = self.provider.account(address) {
-                let acc = AccountInfo::new(acc.balance, acc.nonce, acc.code);
-                let acc2 = acc.clone();
+    fn account(&mut self, address: &Address) -> vm::Result<&AccountInfo> {
+        self.fetch_account(address)?;
 
-                accs.insert(*address, acc);
-                Ok(acc2)
-
-            // TODO:
-            //self.account(address)
-            } else {
-                Err(vm::Error::Internal("Invalid address".to_string()))
-            }
-        }
+        return Ok(&self.accounts.get(address).unwrap().0);
     }
 
     pub fn init_code(&mut self, address: &Address, code: Vec<u8>) {
-        /// TEMP
-        self.provider.init_code(address, code);
+        let mut acc = self.account_mut(address).unwrap();
+        acc.0.code = code;
+        acc.1 = true;
+    }
+
+    fn fetch_account(&mut self, address: &Address) -> vm::Result<()> {
+        if self.accounts.contains_key(address) {
+            return Ok(());
+        }
+
+        if let Ok(acc) = self.provider.account(address) {
+            let acc = AccountInfo::new(acc.balance, acc.nonce, acc.code);
+            self.accounts.insert(*address, (acc, false));
+            Ok(())
+        } else {
+            Err(vm::Error::Internal(format!(
+                "Invalid address: {:?}",
+                address
+            )))
+        }
+    }
+
+    fn fetch_storage(&mut self, address: &Address, key: &H256) -> vm::Result<()> {
+        let acc = self.account(address)?;
+        if acc.storage.contains_key(key) {
+            return Ok(());
+        }
+
+        if let Ok(value) = self.provider.storage_at(address, key) {
+            let acc = self.account_mut(address)?;
+            acc.0.storage.insert(*key, (value, false));
+            Ok(())
+        } else {
+            Err(vm::Error::Internal(format!("Invalid storage: {:?}", key)))
+        }
     }
 }
