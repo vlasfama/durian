@@ -14,8 +14,8 @@ use std::sync::Arc;
 use web3::rpc;
 
 fn main() {
-    // let mut server = event_loop::event_loop();
     simple_logger::init_with_level(Level::Info).unwrap();
     rpchyper::rpc_hyper::Start();
-    // server.run(event_loop::forever()).unwrap();
+    let mut conf = rpc::HttpConfiguration::default();
+    rpc::new_http("HTTP JSON-RPC", "jsonrpc", conf);
 }

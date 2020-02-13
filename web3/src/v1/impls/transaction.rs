@@ -8,9 +8,7 @@ use v1::helpers::errors;
 use v1::traits::TransactionRPC;
 use v1::types::TransactionRequest;
 
-
 pub struct TransactionRPCImpl;
-
 
 impl TransactionRPCImpl {
 	pub fn new() -> Self {
@@ -18,18 +16,15 @@ impl TransactionRPCImpl {
 	}
 }
 
-
 impl TransactionRPC for TransactionRPCImpl {
-
 	fn gas_price(&self) -> BoxFuture<U256> {
 		let trx_count = U256::zero();
+		println! {"the trx_count {:?}",trx_count}
 		let result = Ok(trx_count);
-        Box::new(future::done(result))
+		Box::new(future::done(result))
 
-        // // Some(U256::zero());
-        // // return Err()
-        //  Ok(U256::zero())
+		// // Some(U256::zero());
+		// // return Err()
+		//  Ok(U256::zero())
 	}
-
-
 }
