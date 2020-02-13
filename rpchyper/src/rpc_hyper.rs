@@ -8,6 +8,11 @@ async fn gas_Price(_: Request<Body>) -> Result<Response<Body>, Infallible> {
     Ok(Response::new(Body::from("{id:1,jsonrpc:2.0,result:0x0}")))
 }
 
+
+async fn eth_Transaction(_: Request<Body>) -> Result<Response<Body>, Infallible> {
+    Ok(Response::new(Body::from("eth_Transcation!")))
+}
+
 #[tokio::main]
 pub async fn Start() {
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
@@ -20,3 +25,6 @@ pub async fn Start() {
         eprintln!("server error: {}", e);
     }
 }
+
+
+

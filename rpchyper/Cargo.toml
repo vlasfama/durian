@@ -12,4 +12,5 @@ tokio = { version = "0.2", features = ["full"] }
 blockchain = {path = "../blockchain"}
 jsonrpc-core = "14.0.5"
 futures = "0.3.4"
+hyper-router = "^0.5"
 

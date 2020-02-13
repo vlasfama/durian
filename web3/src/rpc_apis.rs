@@ -10,6 +10,7 @@ use v1::helpers::errors;
 use v1::traits::TransactionRPC;
 use v1::types::TransactionRequest;
 use v1::impls::TransactionRPCImpl;
+use v1::metadata::Metadata;
 
 
 #[derive(Debug, PartialEq, Eq, Hash, Copy, Clone)]
@@ -49,7 +50,7 @@ impl ApiSet {
 	}
 }
 
-pub fn setup_rpc(mut handler: MetaIoHandler<()>, apis: ApiSet) -> MetaIoHandler<()> {
+pub fn setup_rpc(mut handler: MetaIoHandler<Metadata>, apis: ApiSet) -> MetaIoHandler<Metadata> {
 	for api in apis.list_apis() {
 		match api {
 			Api::Transaction => handler.extend_with(TransactionRPCImpl::new().to_delegate()),

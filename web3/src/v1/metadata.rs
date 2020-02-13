@@ -11,6 +11,5 @@ pub struct Metadata {
 	/// Request origin
 	pub origin: Origin
 }
-
 impl jsonrpc_core::Metadata for Metadata {}
 

@@ -1,6 +1,6 @@
 #![feature(proc_macro_hygiene, decl_macro)]
 #[macro_use]
-extern crate rocket;
+
 extern crate byteorder;
 extern crate common_types;
 extern crate ethereum_types;
