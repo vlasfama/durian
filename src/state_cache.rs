@@ -124,4 +124,9 @@ where
             Err(vm::Error::Internal(format!("Invalid storage: {:?}", key)))
         }
     }
+
+    fn update_state(&self) {
+        for (key, value) in &self.accounts {
+        }
+    }
 }

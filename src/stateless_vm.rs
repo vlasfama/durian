@@ -130,7 +130,14 @@ impl StatelessVM {
                 }
                 Err(err) => Err(Error::InternalError(err.to_string())),
             },
-            Err(_err) => panic!("fatal error"),
+            Err(err) => match err {
+                vm::TrapError::Call(params, call) => {
+                    Err(Error::InternalError(format!("Error on call: {:?}", params)))
+                }
+                vm::TrapError::Create(params, address, create) => Err(Error::InternalError(
+                    format!("Error on create at {:?}: {:?}", address, params),
+                )),
+            },
         }
     }
 }

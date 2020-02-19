@@ -32,18 +32,23 @@ fn main() {
 
     bc.commit();
 
+    let params1 = vec![
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0x12, 0x34,
+    ];
 
     let tx1 = Transaction::create(
         bc.address("alice"),
         U256::zero(),
         U256::from(10000000),
         code,
-        vec![],
+        params1,
     );
 
     let vm = StatelessVM::new();
 
     let ret_1 = vm.fire(tx1, &mut bc).unwrap();
+
     bc.incNonce("alice");
     bc.commit();
 
@@ -60,7 +65,7 @@ fn main() {
         vec![],
         params,
     );
-    let ret_2 = vm.fire(tx2, &mut bc);
+    let ret_2 = vm.fire(tx2, &mut bc).unwrap();
     bc.incNonce("alice");
     bc.commit();
 
@@ -73,7 +78,7 @@ fn main() {
         vec![],
         params,
     );
-    let ret_3 = vm.fire(tx3, &mut bc);
+    let ret_3 = vm.fire(tx3, &mut bc).unwrap();
     bc.incNonce("alice");
 
     bc.commit();

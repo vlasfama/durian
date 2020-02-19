@@ -1,10 +1,10 @@
 use ethereum_types::{Address, H256, U256};
-use machine::{externalities::OutputPolicy, substate::Substate, Machine};
+use machine::Machine;
 use parity_bytes::Bytes;
 use state_cache::StateCache;
 use state_provider::StateProvider;
+use std::cell::RefCell;
 use std::sync::Arc;
-use trace::{Tracer, VMTracer};
 use vm::{
     self, ActionParams, CallType, ContractCreateResult, CreateContractAddress, EnvInfo, Ext,
     MessageCallResult, ReturnData, Schedule, TrapKind,
@@ -27,7 +27,7 @@ where
     //state_provider: &'a S,
     //static_flag: bool,
     //  storageProvider: StateProvider;
-    cache: StateCache<'a, SP>,
+    cache: RefCell<StateCache<'a, SP>>,
 }
 
 impl<'a, SP: 'a> StatelessExt<'a, SP>
@@ -48,7 +48,7 @@ where
         provider: &'a mut SP,
         //static_flag: bool,
     ) -> Self {
-        let cache = StateCache::new(provider);
+        let cache = RefCell::new(StateCache::new(provider));
 
         StatelessExt {
             env_info,
@@ -84,14 +84,15 @@ where
     }
 
     fn storage_at(&self, key: &H256) -> vm::Result<H256> {
-        // self.cache
-        //     .storage_at(&self.params.address, key)
-        //     .map_err(Into::into)
-        Ok(H256::zero())
+        self.cache
+            .borrow_mut()
+            .storage_at(&self.params.address, key)
     }
 
     fn set_storage(&mut self, key: H256, value: H256) -> vm::Result<()> {
-        self.cache.set_storage(&self.params.address, &key, &value);
+        self.cache
+            .borrow_mut()
+            .set_storage(&self.params.address, &key, &value);
         Ok(())
     }
 
