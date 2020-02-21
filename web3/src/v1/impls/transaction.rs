@@ -22,9 +22,14 @@ impl TransactionRPC for TransactionRPCImpl {
 		println! {"the trx_count {:?}",trx_count}
 		let result = Ok(trx_count);
 		Box::new(future::done(result))
+		//  Ok(U256::zero())
+	}
 
-		// // Some(U256::zero());
-		// // return Err()
+	fn send_transaction(&self, request:TransactionRequest) -> BoxFuture<H256> {
+		let trx_count = H256::zero();
+		println! {"the trx_count {:?}",trx_count}
+		let result = Ok(trx_count);
+		Box::new(future::done(result))
 		//  Ok(U256::zero())
 	}
 }

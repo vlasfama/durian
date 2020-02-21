@@ -3,7 +3,6 @@
 extern crate log;
 #[macro_use]
 extern crate hex_literal;
-extern crate rpchyper;
 extern crate simple_logger;
 extern crate web3;
 
@@ -15,7 +14,6 @@ use web3::rpc;
 
 fn main() {
     simple_logger::init_with_level(Level::Info).unwrap();
-    rpchyper::rpc_hyper::Start();
     let mut conf = rpc::HttpConfiguration::default();
     rpc::new_http("HTTP JSON-RPC", "jsonrpc", conf);
 }

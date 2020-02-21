@@ -11,4 +11,8 @@ pub trait TransactionRPC {
 	/// Returns current gas_price.
 	#[rpc(name = "eth_gasPrice")]
 	fn gas_price(&self) -> BoxFuture<U256>;
+
+	#[rpc(name = "eth_sendTransaction")]
+	fn send_transaction(&self,tx:TransactionRequest) -> BoxFuture<H256>;
+
 }
