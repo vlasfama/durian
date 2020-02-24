@@ -1,6 +1,8 @@
 use ethereum_types::{Address, H256, U256, U512};
+use log::{debug};
 use state_provider::StateProvider;
 use std::collections::HashMap;
+use error::Error;
 
 #[derive(Debug, Clone, PartialEq)]
 struct AccountInfo {
@@ -37,14 +39,6 @@ where
         }
     }
 
-    ///
-    pub fn create_contract(&mut self, address: Address, nonce: U256) {
-        let acc = AccountInfo::new(U256::zero(), nonce, vec![]);
-        let ret = self.accounts.insert(address, (acc, true));
-
-        assert_eq!(ret, None);
-    }
-
     pub fn nonce(&mut self, address: &Address) -> vm::Result<U256> {
         let acc = self.account(address)?;
         Ok(acc.nonce)
@@ -56,10 +50,19 @@ where
     }
 
     pub fn storage_at(&mut self, address: &Address, key: &H256) -> vm::Result<H256> {
+        // From parity ethereum
+        // If storage root is empty RLP, then early return zero value. Practically, this makes it so that if
+        // `original_storage_cache` is used, then `storage_cache` will always remain empty.
+
         self.fetch_storage(address, key)?;
 
         let acc = self.account(address)?;
-        return Ok(acc.storage.get(key).unwrap().0);
+
+        if let Some(v) = acc.storage.get(key) {
+            Ok(v.0)
+        } else {
+            Ok(H256::zero())
+        }
     }
 
     pub fn set_storage(&mut self, address: &Address, key: &H256, value: &H256) {
@@ -93,6 +96,27 @@ where
         acc.1 = true;
     }
 
+    pub fn update_state(&mut self) -> Result<(), Error>{
+        for (addr, acc) in &self.accounts {
+            if acc.1 {
+                if !self.provider.exist(addr) {
+                    self.provider.create_contract(addr, &acc.0.nonce, &acc.0.code)?;
+                } else {
+                    self.provider.update_account(addr, &acc.0.balance, &acc.0.nonce)?;
+                }
+            }
+
+            for (key, val) in &acc.0.storage {
+                if val.1 {
+                    self.provider.set_storage(addr, key, &val.0)?;
+                }
+            }
+        }
+
+        Ok(())
+    }
+
+
     fn fetch_account(&mut self, address: &Address) -> vm::Result<()> {
         if self.accounts.contains_key(address) {
             return Ok(());
@@ -103,10 +127,9 @@ where
             self.accounts.insert(*address, (acc, false));
             Ok(())
         } else {
-            Err(vm::Error::Internal(format!(
-                "Invalid address: {:?}",
-                address
-            )))
+            let acc = AccountInfo::new(U256::zero(), U256::from(1), vec![]);
+            self.accounts.insert(*address, (acc, false));
+            Ok(())
         }
     }
 
@@ -121,12 +144,8 @@ where
             acc.0.storage.insert(*key, (value, false));
             Ok(())
         } else {
-            Err(vm::Error::Internal(format!("Invalid storage: {:?}", key)))
-        }
-    }
-
-    fn update_state(&self) {
-        for (key, value) in &self.accounts {
+            debug!("Not storage at {:?}", key);
+            Ok(())
         }
     }
 }

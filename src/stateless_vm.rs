@@ -3,12 +3,15 @@ use error::Error;
 use ethereum_types::{Address, U256};
 use machine::Machine;
 use state_provider::StateProvider;
-use stateless_ext::StatelessExt;
+use stateless_ext::{StatelessExt, LogEntry};
 use std::collections::BTreeMap;
 use std::sync::Arc;
 use transaction::{Action, Transaction};
 use vm::{ActionParams, ActionValue, CallType, EnvInfo, Exec, GasLeft, ParamsType};
 use wasm::WasmInterpreter;
+
+
+
 
 #[derive(Debug)]
 pub struct ResultData {
@@ -16,6 +19,7 @@ pub struct ResultData {
     pub data: Vec<u8>,
     pub apply_state: bool,
     pub contract: Address,
+    pub logs: Vec<LogEntry>,
 }
 
 pub struct StatelessVM {}
@@ -39,8 +43,6 @@ impl StatelessVM {
                     &acc.nonce,
                     &vec![],
                 );
-
-                provider.create_contract(new_address, U256::from(1));
 
                 ActionParams {
                     code_address: new_address.clone(),
@@ -111,6 +113,7 @@ impl StatelessVM {
                     apply_state: true,
                     data: vec![],
                     contract: params.address,
+                    logs: ext.logs().to_vec(),
                 }),
                 Ok(GasLeft::NeedsReturn {
                     gas_left,
@@ -118,23 +121,26 @@ impl StatelessVM {
                     apply_state,
                 }) => {
                     if transaction.action == Action::Create {
-                        provider.init_code(&params.address, data.to_vec());
+                       ext.init_code(&params.address, data.to_vec());
                     }
+
+                    ext.update_state()?;
 
                     Ok(ResultData {
                         gas_left,
                         apply_state: apply_state,
                         data: data.to_vec(),
                         contract: params.address,
+                        logs: ext.logs().to_vec(),
                     })
                 }
                 Err(err) => Err(Error::InternalError(err.to_string())),
             },
             Err(err) => match err {
-                vm::TrapError::Call(params, call) => {
+                vm::TrapError::Call(params, _call) => {
                     Err(Error::InternalError(format!("Error on call: {:?}", params)))
                 }
-                vm::TrapError::Create(params, address, create) => Err(Error::InternalError(
+                vm::TrapError::Create(params, address, _create) => Err(Error::InternalError(
                     format!("Error on create at {:?}: {:?}", address, params),
                 )),
             },

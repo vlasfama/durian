@@ -7,13 +7,14 @@ pub struct StateAccount {
     pub code: Vec<u8>,
 }
 
+
 pub trait StateProvider {
     fn account(&self, address: &Address) -> Result<StateAccount, Error>;
     fn storage_at(&self, address: &Address, key: &H256) -> Result<H256, Error>;
     fn blockhash(&self, num: i64) -> U512;
     fn exist(&self, address: &Address) -> bool;
 
-    fn create_contract(&mut self, address: Address, nonce: U256);
-    fn init_code(&mut self, address: &Address, code: Vec<u8>);
-    fn set_storage(&mut self, address: &Address, key: &H256, value: &H256);
+    fn create_contract(&mut self, address: &Address, nonce: &U256, code: &Vec<u8>) -> Result<(), Error>;
+    fn set_storage(&mut self, address: &Address, key: &H256, value: &H256) -> Result<(), Error>;
+    fn update_account(&mut self, address: &Address, bal: &U256, nonce: &U256) -> Result<(), Error>;
 }

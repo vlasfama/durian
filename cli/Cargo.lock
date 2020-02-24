@@ -618,6 +618,7 @@ dependencies = [
  "common-types 0.1.0 (git+https://github.com/b00f/parity-ethereum.git)",
  "ethcore-miner 1.12.0 (git+https://github.com/b00f/parity-ethereum.git)",
  "ethereum-types 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "log 0.4.8 (registry+https://github.com/rust-lang/crates.io-index)",
  "machine 0.1.0 (git+https://github.com/b00f/parity-ethereum.git)",
  "parity-bytes 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "trace 0.1.0 (git+https://github.com/b00f/parity-ethereum.git)",

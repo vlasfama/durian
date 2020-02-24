@@ -8,19 +8,18 @@ extern crate simple_logger;
 
 use blockchain::blockchain::Blockchain;
 use durian::stateless_vm::StatelessVM;
-use durian::transaction::{Action, Transaction};
-use ethereum_types::{Address, U256};
+use durian::transaction::{Transaction};
+use ethereum_types::U256;
 use log::Level;
 use std::fs::File;
 use std::io::Read;
-use std::sync::Arc;
 
 fn main() {
-    simple_logger::init_with_level(Level::Info).unwrap();
+    simple_logger::init_with_level(Level::Debug).unwrap();
 
     let mut bc = Blockchain::new();
 
-    let file_path = "./compiled-contract/pwasm_greeter.wasm";
+    let file_path = "./compiled-contract/erc20.wasm";
     let mut file = match File::open(file_path) {
         Ok(file) => file,
         Err(err) => panic!(err.to_string()),
@@ -33,53 +32,77 @@ fn main() {
     bc.commit();
 
     let params1 = vec![
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0, 0x12, 0x34,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF,
     ];
-
     let tx1 = Transaction::create(
         bc.address("alice"),
         U256::zero(),
-        U256::from(10000000),
+        U256::from(1000000),
         code,
         params1,
     );
 
     let vm = StatelessVM::new();
 
-    let ret_1 = vm.fire(tx1, &mut bc).unwrap();
-
+    let ret1 = vm.fire(tx1, &mut bc).unwrap();
+    info!("ret1: {:?}", ret1);
     bc.incNonce("alice");
     bc.commit();
 
-    let addr_1 = ret_1.contract;
-    let params = vec![
-        0x40, 0x18, 0xd9, 0xaa, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0, 0x12, 0x34,
-    ];
+    // transfer to bob: 0xa9059cbb
+    let contract = ret1.contract;
+    let mut params2 = vec![0xa9, 0x05, 0x9c, 0xbb, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+    params2.append(&mut bc.address("bob").as_bytes_mut().to_vec());
+    params2.append(&mut vec![
+        0x00, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF,
+    ]);
+
     let tx2 = Transaction::call(
         bc.address("alice"),
-        addr_1,
+        contract,
         U256::zero(),
         U256::from(1000000),
         vec![],
-        params,
+        params2,
     );
-    let ret_2 = vm.fire(tx2, &mut bc).unwrap();
+    let ret2 = vm.fire(tx2, &mut bc).unwrap();
+    info!("ret2: {:?}", ret2);
     bc.incNonce("alice");
     bc.commit();
 
-    let params = vec![0x51, 0x97, 0xc7, 0xaa];
+    // total_supply: 0x18160ddd
+    let params3 = vec![0x18, 0x16, 0x0d, 0xdd];
     let tx3 = Transaction::call(
         bc.address("alice"),
-        addr_1,
+        contract,
         U256::zero(),
         U256::from(1000000),
         vec![],
-        params,
+        params3,
     );
-    let ret_3 = vm.fire(tx3, &mut bc).unwrap();
+    let ret3 = vm.fire(tx3, &mut bc).unwrap();
+    info!("ret3: {:?}", ret3);
     bc.incNonce("alice");
+    bc.commit();
 
+    // balance_f: 0x70a08231
+    let mut params4 = vec![0x70, 0xa0, 0x82, 0x31, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+    params4.append(&mut bc.address("bob").as_bytes_mut().to_vec());
+
+    let tx4 = Transaction::call(
+        bc.address("bob"),
+        contract,
+        U256::zero(),
+        U256::from(1000000),
+        vec![],
+        params4,
+    );
+    let ret4 = vm.fire(tx4, &mut bc).unwrap();
+    info!("ret4: {:?}", ret4);
+    bc.incNonce("bob");
     bc.commit();
 }

@@ -1,3 +1,4 @@
+use error::Error;
 use ethereum_types::{Address, H256, U256};
 use machine::Machine;
 use parity_bytes::Bytes;
@@ -9,6 +10,13 @@ use vm::{
     self, ActionParams, CallType, ContractCreateResult, CreateContractAddress, EnvInfo, Ext,
     MessageCallResult, ReturnData, Schedule, TrapKind,
 };
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct LogEntry {
+    pub address: Address,
+    pub topics: Vec<H256>,
+    pub data: Vec<u8>,
+}
 
 pub struct StatelessExt<'a, SP: 'a>
 where
@@ -28,6 +36,7 @@ where
     //static_flag: bool,
     //  storageProvider: StateProvider;
     cache: RefCell<StateCache<'a, SP>>,
+    logs: Vec<LogEntry>,
 }
 
 impl<'a, SP: 'a> StatelessExt<'a, SP>
@@ -49,6 +58,7 @@ where
         //static_flag: bool,
     ) -> Self {
         let cache = RefCell::new(StateCache::new(provider));
+        let logs = vec![];
 
         StatelessExt {
             env_info,
@@ -63,7 +73,21 @@ where
             //vm_tracer,
             //static_flag,
             cache,
+            logs,
         }
+    }
+
+    pub fn init_code(&mut self, address: &Address, code: Vec<u8>) {
+        self.cache.borrow_mut().init_code(address, code);
+    }
+
+    pub fn update_state(&mut self) -> Result<(), Error> {
+        self.cache.borrow_mut().update_state()?;
+        Ok(())
+    }
+
+    pub fn logs(&self) -> &Vec<LogEntry> {
+        &self.logs
     }
 }
 
@@ -166,7 +190,13 @@ where
     }
 
     fn log(&mut self, topics: Vec<H256>, data: &[u8]) -> vm::Result<()> {
-        println!("hello");
+        let address = self.params.address.clone();
+        self.logs.push(LogEntry {
+            address,
+            topics,
+            data: data.to_vec(),
+        });
+
         Ok(())
     }
 

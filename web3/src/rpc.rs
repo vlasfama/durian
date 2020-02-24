@@ -5,8 +5,8 @@ use jsonrpc_http_server::{AccessControlAllowOrigin, DomainsValidation, RestApi, 
 
 //deploy the contract
 fn call_contract(params: Params) {
-	let mut bc = Blockchain::new();
-	bc.call_contract(params);
+	//let mut bc = Blockchain::new();
+	//bc.call_contract(params);
 }
 
 //init the rpc
