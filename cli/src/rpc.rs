@@ -4,6 +4,7 @@ use jsonrpc_http_server::{AccessControlAllowOrigin, DomainsValidation, ServerBui
 
 pub fn initRPC() {
 	let mut io = IoHandler::default();
+
 	io.add_method("eth_gasPrice", |_params| {
 		futures::finished(Value::String("0".to_owned()))
 	});
@@ -17,7 +18,7 @@ pub fn initRPC() {
 		.cors(DomainsValidation::AllowOnly(vec![
 			AccessControlAllowOrigin::Null,
 		]))
-		.start_http(&"127.0.0.1:8545".parse().unwrap())
+		.start_http(&"127.0.0.1:3000".parse().unwrap())
 		.expect("Unable to start RPC server");
 
 	server.wait();
