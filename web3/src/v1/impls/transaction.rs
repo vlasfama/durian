@@ -7,7 +7,7 @@ use jsonrpc_core::{BoxFuture, Result};
 use v1::helpers::errors;
 use v1::traits::TransactionRPC;
 use v1::types::TransactionRequest;
-
+use v1::metadata::Metadata;
 pub struct TransactionRPCImpl;
 
 impl TransactionRPCImpl {
@@ -17,6 +17,9 @@ impl TransactionRPCImpl {
 }
 
 impl TransactionRPC for TransactionRPCImpl {
+
+	type Metadata = Metadata;
+
 	fn gas_price(&self) -> BoxFuture<U256> {
 		let trx_count = U256::zero();
 		println! {"the trx_count {:?}",trx_count}

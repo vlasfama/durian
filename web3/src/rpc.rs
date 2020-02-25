@@ -1,7 +1,7 @@
 use crate::rpc_apis::{self, Api, ApiSet};
 use crate::rpc_service::{self as rpc, start_http};
-use crate::v1::{extractors,Metadata};
-use extractors::{RpcExtractor};
+use crate::v1::{extractors, Metadata};
+use extractors::RpcExtractor;
 use jsonrpc_core::{Compatibility, MetaIoHandler};
 pub use jsonrpc_http_server::{DomainsValidation, Server};
 use std::collections::HashSet;
@@ -9,10 +9,8 @@ use std::io;
 use std::net::SocketAddr;
 use std::sync::Arc;
 
-
 /// RPC HTTP Server instance
-pub type HttpServer = http::Server;
-pub const DAPPS_DOMAIN: &'static str = "web3.site";
+// pub type HttpServer = http::Server;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct HttpConfiguration {
@@ -26,9 +24,6 @@ pub struct HttpConfiguration {
 	pub apis: ApiSet,
 	/// CORS headers
 	pub cors: Option<Vec<String>>,
-	/// Specify a list of valid hosts we accept requests from.
-	pub hosts: Option<Vec<String>>,
-	/// Number of HTTP server threads to use to handle incoming requests (default is 4).
 	pub server_threads: usize,
 	/// Sets the maximum size of a request body in megabytes (default is 5 MiB).
 	pub max_payload: usize,
@@ -45,10 +40,9 @@ impl Default for HttpConfiguration {
 			port: 8545,
 			apis: ApiSet::default(),
 			cors: Some(vec![]),
-			hosts: Some(vec![]),
-			server_threads: 4,
-			max_payload: 5,
 			keep_alive: true,
+			max_payload: 5,
+			server_threads: 1,
 		}
 	}
 }
@@ -57,11 +51,10 @@ pub fn new_http(
 	id: &str,
 	options: &str,
 	conf: HttpConfiguration,
-) -> Result<Option<HttpServer>, String> {
+) -> Result<Option<Server>, String> {
 	if !conf.enabled {
 		return Ok(None);
 	}
-	let domain = DAPPS_DOMAIN;
 	let url = format!("{}:{}", conf.interface, conf.port);
 	let addr = url
 		.parse()
@@ -72,12 +65,13 @@ pub fn new_http(
 	);
 
 	let cors_domains = into_domains(conf.cors);
-	let allowed_hosts = into_domains(with_domain(conf.hosts, domain, &Some(url.clone().into())));
+	// let allowed_hosts = into_domains(with_domain(&Some(url.clone().into())));
 
-	let start_result = start_http(&addr,cors_domains,
-		allowed_hosts,
+	let start_result = start_http(
+		&addr,
+		cors_domains,
 		handler,
-		RpcExtractor,
+		rpc::RpcExtractor,
 		conf.server_threads,
 		conf.max_payload,
 		conf.keep_alive,
@@ -129,4 +123,3 @@ fn with_domain(
 		items.into_iter().collect()
 	})
 }
-

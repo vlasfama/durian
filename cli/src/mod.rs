@@ -1,2 +1,5 @@
 mod event_loop;
-pub mod self::event_loop::event_loop;
+mod rpc;
+pub use event_loop::{event_loop, forever};
+pub use rpc;
+

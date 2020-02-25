@@ -1,15 +1,14 @@
-use v1::Metadata;
 use jsonrpc_core;
 use jsonrpc_http_server::{self, Server, ServerBuilder};
 use std::io;
 use std::net::SocketAddr;
 use std::path::{Path, PathBuf};
+use v1::Metadata;
 extern crate jsonrpc_derive;
 extern crate jsonrpc_http_server as http;
 use crate::http_common;
 use crate::v1;
 use http_common::HttpMetaExtractor;
-
 
 pub use v1::extractors::RpcExtractor;
 
@@ -25,7 +24,6 @@ pub type HttpServer = http::Server;
 pub fn start_http<M, S, H, T>(
 	addr: &SocketAddr,
 	cors_domains: http::DomainsValidation<http::AccessControlAllowOrigin>,
-	allowed_hosts: http::DomainsValidation<http::Host>,
 	handler: H,
 	extractor: T,
 	threads: usize,
@@ -36,15 +34,14 @@ where
 	M: jsonrpc_core::Metadata,
 	S: jsonrpc_core::Middleware<M>,
 	H: Into<jsonrpc_core::MetaIoHandler<M, S>>,
-	T: HttpMetaExtractor<Metadata=M>,
+	T: HttpMetaExtractor<Metadata = M>,
 {
 	let extractor = http_common::MetaExtractor::new(extractor);
 	Ok(http::ServerBuilder::with_meta_extractor(handler, extractor)
 		.keep_alive(keep_alive)
 		.threads(threads)
 		.cors(cors_domains)
-		.allowed_hosts(allowed_hosts)
-		.health_api(("/api/health", "durian"))
+		.health_api(("/api/health", "durian_value"))
 		.cors_allow_headers(AccessControlAllowHeaders::Any)
 		.max_request_body_size(max_payload * 1024 * 1024)
 		.start_http(addr)?)
