@@ -12,7 +12,7 @@ log = "0.4"
 time = { version = "0.2", features = ["std", "serde"] }
 hex-literal = "0.2.1"
 web3 = {path="../web3"}
-blockchain = {path= "../blockchain"}
+# blockchain = {path= "../blockchain"}
 tokio-core = "0.1.6"
 tokio-io = "0.1.12"
 parking_lot = "0.8"
@@ -28,7 +28,7 @@ tokio-proto = "0.1"
 tokio-service = "0.1"
 unicase = "1.0"
 url = "1.0"
-hyper = "0.13"
+
 pretty_env_logger = "0.4.0"
 
 [dev-dependencies]

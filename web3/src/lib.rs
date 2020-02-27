@@ -1,5 +1,3 @@
-extern crate blockchain;
-
 
 pub mod rpc_apis;
 pub mod rpc;
