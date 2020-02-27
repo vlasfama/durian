@@ -5,6 +5,7 @@ extern crate durian;
 extern crate log;
 extern crate ethereum_types;
 extern crate simple_logger;
+extern crate web3;
 
 use blockchain::blockchain::Blockchain;
 use durian::stateless_vm::StatelessVM;
@@ -13,9 +14,17 @@ use ethereum_types::U256;
 use log::Level;
 use std::fs::File;
 use std::io::Read;
+use web3::rpc;
+mod event_loop;
 
 fn main() {
     simple_logger::init_with_level(Level::Debug).unwrap();
+
+
+    let mut el = event_loop::event_loop();
+    let conf = rpc::HttpConfiguration::default();
+    let server = rpc::new_http("HTTP JSON-RPC", "jsonrpc", conf);
+     el.run(event_loop::forever()).unwrap();
 
     let mut bc = Blockchain::new();
 
