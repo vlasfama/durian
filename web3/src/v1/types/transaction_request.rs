@@ -1,12 +1,14 @@
+extern crate durian;
 use ethereum_types::{H160, U256};
 use crate::v1;
-use v1::types::{Bytes};
 use std::fmt;
 use serde_derive::{Deserialize, Serialize};
 use serde_json;
 use ansi_term::Colour;
 use v1::helpers;
 use helpers::FilledTransactionRequest;
+use v1::types::{Bytes};
+
 
 /// Transaction request coming from RPC
 #[derive(Debug, Clone, Default, Eq, PartialEq, Hash, Serialize, Deserialize)]

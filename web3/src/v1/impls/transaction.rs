@@ -5,10 +5,11 @@ use jsonrpc_core::types::Value;
 use jsonrpc_core::Error;
 use jsonrpc_core::{BoxFuture, Result};
 use v1::helpers::errors;
+use v1::metadata::Metadata;
 use v1::traits::TransactionRPC;
 use v1::types::TransactionRequest;
-use v1::metadata::Metadata;
 pub struct TransactionRPCImpl;
+use crate::call_deploy::call_deploy;
 
 impl TransactionRPCImpl {
 	pub fn new() -> Self {
@@ -17,7 +18,6 @@ impl TransactionRPCImpl {
 }
 
 impl TransactionRPC for TransactionRPCImpl {
-
 	type Metadata = Metadata;
 
 	fn gas_price(&self) -> BoxFuture<U256> {
@@ -28,7 +28,8 @@ impl TransactionRPC for TransactionRPCImpl {
 		//  Ok(U256::zero())
 	}
 
-	fn send_transaction(&self, request:TransactionRequest) -> BoxFuture<H256> {
+	fn send_transaction(&self, request: TransactionRequest) -> BoxFuture<H256> {
+        call_deploy(request);
 		let trx_count = H256::zero();
 		println! {"the trx_count {:?}",trx_count}
 		let result = Ok(trx_count);
