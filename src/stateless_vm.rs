@@ -54,7 +54,7 @@ impl StatelessVM {
                     code: Some(Arc::new(transaction.code)),
                     data: Some(transaction.params),
                     call_type: CallType::None,
-                    params_type: ParamsType::Separate,
+                    params_type: ParamsType::Embedded,
                     gas_price: U256::zero(),
                     code_hash: None,
                     code_version: U256::zero(),

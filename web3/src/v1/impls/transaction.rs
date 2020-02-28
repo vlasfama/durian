@@ -1,8 +1,8 @@
 use crate::v1;
-use ethereum_types::{Address, H160, H256, U256, U512};
+use ethereum_types::{Address, H160, H256,H520, U256, U512};
 use jsonrpc_core::futures::{future, Future};
 use jsonrpc_core::types::Value;
-use jsonrpc_core::Error;
+use jsonrpc_core::{Error,Params};
 use jsonrpc_core::{BoxFuture, Result};
 use v1::helpers::errors;
 use v1::metadata::Metadata;
@@ -11,6 +11,7 @@ use v1::types::TransactionRequest;
 pub struct TransactionRPCImpl;
 use crate::call_deploy::call_deploy;
 
+use std::io;
 impl TransactionRPCImpl {
 	pub fn new() -> Self {
 		TransactionRPCImpl {}
@@ -25,15 +26,15 @@ impl TransactionRPC for TransactionRPCImpl {
 		println! {"the trx_count {:?}",trx_count}
 		let result = Ok(trx_count);
 		Box::new(future::done(result))
-		//  Ok(U256::zero())
 	}
 
-	fn send_transaction(&self, request: TransactionRequest) -> BoxFuture<H256> {
-        call_deploy(request);
-		let trx_count = H256::zero();
-		println! {"the trx_count {:?}",trx_count}
-		let result = Ok(trx_count);
-		Box::new(future::done(result))
-		//  Ok(U256::zero())
+	fn send_transaction(&self, request: TransactionRequest) -> Result<H160> {
+		let result = call_deploy(request);
+		Ok((result.unwrap()))
+	}
+
+	fn getTransaction_Receipt(&self, hash:H520) -> Result<H160> {
+		// let result=call_deploy(request);
+		Ok(H160::zero())
 	}
 }

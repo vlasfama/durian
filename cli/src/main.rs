@@ -20,7 +20,6 @@ mod event_loop;
 fn main() {
     simple_logger::init_with_level(Level::Debug).unwrap();
 
-
     let mut el = event_loop::event_loop();
     let conf = rpc::HttpConfiguration::default();
     let server = rpc::new_http("HTTP JSON-RPC", "jsonrpc", conf);
