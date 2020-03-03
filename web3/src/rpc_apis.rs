@@ -11,6 +11,7 @@ use v1::traits::TransactionRPC;
 use v1::types::TransactionRequest;
 use v1::impls::TransactionRPCImpl;
 use v1::metadata::Metadata;
+use blockchain::blockchain::Blockchain;
 
 
 #[derive(Debug, PartialEq, Eq, Hash, Copy, Clone)]
@@ -50,10 +51,10 @@ impl ApiSet {
 	}
 }
 
-pub fn setup_rpc(mut handler: MetaIoHandler<Metadata>, apis: ApiSet) -> MetaIoHandler<Metadata> {
+pub fn setup_rpc(mut handler: MetaIoHandler<Metadata>, apis: ApiSet,bc:Blockchain) -> MetaIoHandler<Metadata> {
 	for api in apis.list_apis() {
 		match api {
-			Api::Transaction => handler.extend_with(TransactionRPCImpl::new().to_delegate()),
+			Api::Transaction => handler.extend_with(TransactionRPCImpl::new(bc.clone()).to_delegate()),
 		}
 	}
 

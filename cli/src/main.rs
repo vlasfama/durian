@@ -20,12 +20,11 @@ mod event_loop;
 fn main() {
     simple_logger::init_with_level(Level::Debug).unwrap();
 
+    let mut bc = Blockchain::new();
     let mut el = event_loop::event_loop();
     let conf = rpc::HttpConfiguration::default();
     let server = rpc::new_http("HTTP JSON-RPC", "jsonrpc", conf);
      el.run(event_loop::forever()).unwrap();
-
-    let mut bc = Blockchain::new();
 
     let file_path = "./compiled-contract/erc20.wasm";
     let mut file = match File::open(file_path) {

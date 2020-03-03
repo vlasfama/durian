@@ -8,6 +8,7 @@ use std::collections::HashSet;
 use std::io;
 use std::net::SocketAddr;
 use std::sync::Arc;
+use blockchain::blockchain::Blockchain;
 
 /// RPC HTTP Server instance
 // pub type HttpServer = http::Server;
@@ -56,12 +57,14 @@ pub fn new_http(
 		return Ok(None);
 	}
 	let url = format!("{}:{}", conf.interface, conf.port);
+	let bc = Blockchain::new();
 	let addr = url
 		.parse()
 		.map_err(|_| format!("Invalid {} listen host/port given: {}", id, url))?;
 	let handler = rpc_apis::setup_rpc(
 		MetaIoHandler::with_compatibility(Compatibility::Both),
 		conf.apis,
+		bc
 	);
 
 	let cors_domains = into_domains(conf.cors);
@@ -85,9 +88,9 @@ pub fn new_http(
 	}
 }
 
-fn setup_rpc_server(apis: ApiSet) -> MetaIoHandler<Metadata> {
-	rpc_apis::setup_rpc(MetaIoHandler::with_compatibility(Compatibility::Both), apis)
-}
+// fn setup_rpc_server(apis: ApiSet) -> MetaIoHandler<Metadata> {
+// 	rpc_apis::setup_rpc(MetaIoHandler::with_compatibility(Compatibility::Both), apis,Blockchain)
+// }
 
 fn into_domains<T: From<String>>(items: Option<Vec<String>>) -> DomainsValidation<T> {
 	items

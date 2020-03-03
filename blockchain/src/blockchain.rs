@@ -6,7 +6,7 @@ extern crate time;
 
 use durian::error::Error;
 use durian::state_provider::{StateAccount, StateProvider};
-use ethereum_types::{Address, H256, U256, U512};
+use ethereum_types::{Address, H160, H256, U256, U512};
 use serde::{Deserialize, Serialize};
 use sha3::{Digest, Keccak256};
 use std::collections::HashMap;
@@ -16,27 +16,36 @@ use hex_literal::hex;
 
 pub type Hash = H256;
 
-#[derive(Serialize, Deserialize, PartialEq, Debug)]
+#[derive(Serialize, Deserialize, PartialEq, Debug,Clone)]
 pub struct Block {
     num: u32,
     prev: Hash,
     time: PrimitiveDateTime,
 }
 
-#[derive(Debug)]
+#[derive(Debug,Clone,Serialize, Deserialize,)]
 pub struct Account {
     address: Address,
     nonce: U256,
     balance: U256,
     code: Vec<u8>,
     storage: HashMap<H256, H256>,
+
 }
 
-#[derive(Debug)]
+#[derive(Debug,Clone,Serialize, Deserialize,)]
+pub struct Transaction {
+   transaction_hash:H256,
+   transaction_index:U256,
+   sc_addr:H160,
+}
+
+#[derive(Debug,Clone,Serialize, Deserialize,)]
 pub struct Blockchain {
     blocks: Vec<Block>,
     accounts: HashMap<String, Account>,
     counter: i32,
+    transactions:HashMap<Hash, Transaction>
 }
 
 impl Blockchain {
@@ -66,10 +75,17 @@ impl Blockchain {
             Account::new(addr, U256::from(1000000), U256::zero(), vec![]),
         );
 
+         let mut tx = HashMap::new();
+         tx.insert(
+            Hash::zero(),
+            Transaction::new(H160::zero(),H256::zero(),U256::zero()),
+         );
+
         Blockchain {
             blocks: vec![gen],
             accounts: accounts,
             counter: 0,
+            transactions:tx,
         }
     }
 
@@ -131,6 +147,14 @@ impl Blockchain {
 
         Err(Error::InvalidAddress)
     }
+
+    pub fn last_block_hash(&self) -> Hash {
+        self.blocks.last().unwrap().hash()
+    }
+
+
+
+
 }
 
 impl StateProvider for Blockchain {
@@ -195,6 +219,8 @@ impl Block {
         let bytes = bincode::serialize(self).unwrap();
         Hash::from_slice(Keccak256::digest(&bytes).as_slice())
     }
+
+
 }
 
 impl Account {
@@ -207,4 +233,15 @@ impl Account {
             storage: HashMap::new(),
         }
     }
+}
+
+impl Transaction{
+    pub fn new(c_addr:H160,tx_hash:H256,tx_index:U256) -> Transaction {
+        Transaction {
+            sc_addr:c_addr,
+            transaction_hash:tx_hash,
+            transaction_index:tx_index,
+        }
+    }
+      
 }

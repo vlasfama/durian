@@ -31,3 +31,5 @@ blockchain = {path= "../blockchain"}
 durian = { path = ".." }
 bytes = "0.5.4"
 parity-bytes = "0.1"
+[dependencies.common-types]
+git = "https://github.com/b00f/parity-ethereum.git"
