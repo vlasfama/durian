@@ -1,4 +1,5 @@
 extern crate bincode;
+extern crate durian;
 extern crate ethereum_types;
 extern crate hex_literal;
 extern crate sha3;
@@ -6,6 +7,8 @@ extern crate time;
 
 use durian::error::Error;
 use durian::state_provider::{StateAccount, StateProvider};
+use durian::stateless_vm::ResultData;
+use durian::transaction::Transaction;
 use ethereum_types::{Address, H160, H256, U256, U512};
 use serde::{Deserialize, Serialize};
 use sha3::{Digest, Keccak256};
@@ -16,36 +19,29 @@ use hex_literal::hex;
 
 pub type Hash = H256;
 
-#[derive(Serialize, Deserialize, PartialEq, Debug,Clone)]
+#[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
 pub struct Block {
     num: u32,
     prev: Hash,
     time: PrimitiveDateTime,
 }
 
-#[derive(Debug,Clone,Serialize, Deserialize,)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Account {
     address: Address,
     nonce: U256,
     balance: U256,
     code: Vec<u8>,
     storage: HashMap<H256, H256>,
-
 }
 
-#[derive(Debug,Clone,Serialize, Deserialize,)]
-pub struct Transaction {
-   transaction_hash:H256,
-   transaction_index:U256,
-   sc_addr:H160,
-}
-
-#[derive(Debug,Clone,Serialize, Deserialize,)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[allow(dead_code)]
 pub struct Blockchain {
     blocks: Vec<Block>,
     accounts: HashMap<String, Account>,
     counter: i32,
-    transactions:HashMap<Hash, Transaction>
+    pub transactions: HashMap<Hash, (Transaction, ResultData)>,
 }
 
 impl Blockchain {
@@ -75,17 +71,11 @@ impl Blockchain {
             Account::new(addr, U256::from(1000000), U256::zero(), vec![]),
         );
 
-         let mut tx = HashMap::new();
-         tx.insert(
-            Hash::zero(),
-            Transaction::new(H160::zero(),H256::zero(),U256::zero()),
-         );
-
         Blockchain {
             blocks: vec![gen],
             accounts: accounts,
             counter: 0,
-            transactions:tx,
+            transactions: HashMap::new(),
         }
     }
 
@@ -123,6 +113,11 @@ impl Blockchain {
         self.accounts.get(alias).unwrap().code.clone()
     }
 
+    pub fn code_at(&self, address: H160) -> Vec<u8> {
+        let acc = self.account(&address).unwrap();
+        acc.code.clone()
+    }
+
     pub fn incNonce(&mut self, alias: &str) {
         let mut acc = self.accounts.get_mut(alias).unwrap();
         acc.nonce = acc.nonce + U256::from(1)
@@ -152,9 +147,23 @@ impl Blockchain {
         self.blocks.last().unwrap().hash()
     }
 
+    pub fn get_blocknumber(&self) -> u32 {
+        self.blocks.last().unwrap().block_number()
+    }
 
+    pub fn add_transactions(&mut self, transaction: Transaction, result: ResultData) -> H256 {
+        let txhash = transaction.hash();
+        self.transactions.insert(txhash, (transaction, result));
+        return txhash;
+    }
 
-
+    pub fn get_transactiondetails(
+        &mut self,
+        hash: H256,
+    ) -> Result<(Transaction, ResultData), Error> {
+        let tx = self.transactions.get(&hash).unwrap();
+        return Ok(tx.clone());
+    }
 }
 
 impl StateProvider for Blockchain {
@@ -167,7 +176,12 @@ impl StateProvider for Blockchain {
         })
     }
 
-    fn create_contract(&mut self, address: &Address, nonce: &U256, code: &Vec<u8>) -> Result<(), Error> {
+    fn create_contract(
+        &mut self,
+        address: &Address,
+        nonce: &U256,
+        code: &Vec<u8>,
+    ) -> Result<(), Error> {
         let name = format!("contract_{}", self.counter + 1);
         let mut acc = Account::new(*address, U256::zero(), *nonce, code.clone());
         self.accounts.insert(name, acc);
@@ -220,11 +234,14 @@ impl Block {
         Hash::from_slice(Keccak256::digest(&bytes).as_slice())
     }
 
-
+    pub fn block_number(&self) -> u32 {
+        let block_number = self.num;
+        return block_number;
+    }
 }
 
 impl Account {
-    pub fn new(addr: Address, bal: U256, nonce: U256, code :Vec<u8>) -> Account {
+    pub fn new(addr: Address, bal: U256, nonce: U256, code: Vec<u8>) -> Account {
         Account {
             address: addr,
             balance: bal,
@@ -233,15 +250,4 @@ impl Account {
             storage: HashMap::new(),
         }
     }
-}
-
-impl Transaction{
-    pub fn new(c_addr:H160,tx_hash:H256,tx_index:U256) -> Transaction {
-        Transaction {
-            sc_addr:c_addr,
-            transaction_hash:tx_hash,
-            transaction_index:tx_index,
-        }
-    }
-      
 }

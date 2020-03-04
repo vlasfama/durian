@@ -1,24 +1,28 @@
-use ethereum_types::{Address, H160, H256, H520, U256};
+use ethereum_types::{Address, H160, H256, H520, U256, U64};
 use serde_derive::{Deserialize, Serialize};
 use serde_json;
 /// Transaction request coming from RPC
 #[derive(Debug, Clone, Default, Eq, PartialEq, Hash, Serialize, Deserialize)]
 pub struct TxReceipt {
     /// Transaction Hash
-    pub transaction_hash:H256,
+    pub transaction_hash: H256,
     /// Transaction index
-    pub transaction_index:U256,
+    pub transaction_index: U256,
     /// Block hash
-    pub block_hash: H256,
+    pub blockHash: H256,
     /// Sender
     pub from: Address,
     /// Recipient
     pub to: H160,
     /// Block number
-    pub block_number: U256,
+    pub blockNumber: u32,
     /// Cumulative gas used
     /// Gas used
-    pub gas_used:U256,
+    pub gasUsed: U256,
     /// Contract address
-    pub contract_address:H160,
+    pub contractAddress: H160,
+    /// Cumulative gas used
+    pub cumulativeGasUsed: U256,
+
+    pub status: &'static str,
 }

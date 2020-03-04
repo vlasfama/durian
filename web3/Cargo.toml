@@ -21,6 +21,7 @@ futures = "0.3.3"
 log = "0.4"
 simple_logger = "1.4.0"
 ethereum-types = "0.8.0"
+primitive-types = "0.1.5"
 serde = "1.0"
 serde_derive = "1.0"
 serde_json = "1.0"
@@ -33,3 +34,4 @@ bytes = "0.5.4"
 parity-bytes = "0.1"
 [dependencies.common-types]
 git = "https://github.com/b00f/parity-ethereum.git"
+

@@ -3,7 +3,7 @@ pub mod rpc_apis;
 pub mod rpc;
 pub mod rpc_service;
 pub mod http_common;
-pub mod call_deploy;
+pub mod contract_call;
 
 
 pub use jsonrpc_core::{Compatibility, Error, MetaIoHandler};

@@ -9,6 +9,11 @@ byteorder = "1.0"
 ethereum-types = "0.8.0"
 parity-bytes = "0.1"
 log = "0.4"
+bincode = "1.2.0"
+serde = { version = "1.0", features = ["derive"] }
+sha3 = "0.8.2"
+hex-literal = "0.2.1"
+primitive-types = "0.1.5"
 
 
 [dependencies.ethcore-miner]

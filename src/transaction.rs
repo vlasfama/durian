@@ -1,14 +1,17 @@
-use ethereum_types::{Address, U256};
+use ethereum_types::{Address,H160,H256,U256};
 use parity_bytes::Bytes;
+use serde::{Deserialize, Serialize};
+use sha3::{Digest, Keccak256};
 
+pub type Hash = H256;
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
 pub enum Action {
     Create,
     Call(Address),
 }
 
-#[derive(Debug)]
+#[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
 pub struct Transaction {
     pub sender: Address,
     pub value: U256,
@@ -48,5 +51,8 @@ impl Transaction {
         }
     }
 
-
+    pub fn hash(&self) -> Hash {
+        let bytes = bincode::serialize(self).unwrap();
+        Hash::from_slice(Keccak256::digest(&bytes).as_slice())
+    }
 }

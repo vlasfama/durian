@@ -9,11 +9,12 @@ use std::sync::Arc;
 use transaction::{Action, Transaction};
 use vm::{ActionParams, ActionValue, CallType, EnvInfo, Exec, GasLeft, ParamsType};
 use wasm::WasmInterpreter;
+use serde::{Deserialize, Serialize};
 
 
 
 
-#[derive(Debug)]
+#[derive(Debug,Clone,Serialize, Deserialize,)]
 pub struct ResultData {
     pub gas_left: U256,
     pub data: Vec<u8>,
