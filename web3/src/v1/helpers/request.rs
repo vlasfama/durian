@@ -49,6 +49,25 @@ pub struct FilledTransactionRequest {
 
 }
 
+/// Call request
+#[derive(Debug, Default, PartialEq)]
+pub struct CallRequest {
+	/// From
+	pub from: Option<Address>,
+	/// To
+	pub to: Option<Address>,
+	/// Gas Price
+	pub gas_price: Option<U256>,
+	/// Gas
+	pub gas: Option<U256>,
+	/// Value
+	pub value: Option<U256>,
+	/// Data
+	pub data: Option<Vec<u8>>,
+	/// Nonce
+	pub nonce: Option<U256>,
+}
+
 impl From<FilledTransactionRequest> for TransactionRequest {
 	fn from(r: FilledTransactionRequest) -> Self {
 		TransactionRequest {

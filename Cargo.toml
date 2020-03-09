@@ -14,6 +14,9 @@ serde = { version = "1.0", features = ["derive"] }
 sha3 = "0.8.2"
 hex-literal = "0.2.1"
 primitive-types = "0.1.5"
+parity-util-mem = "0.5.1"
+
+
 
 
 [dependencies.ethcore-miner]
@@ -33,6 +36,7 @@ git = "https://github.com/b00f/parity-ethereum.git"
 
 [dependencies.common-types]
 git = "https://github.com/b00f/parity-ethereum.git"
+
 
 [lib]
 path = "src/lib.rs"

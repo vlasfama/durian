@@ -109,6 +109,11 @@ impl Blockchain {
         self.accounts.get(alias).unwrap().address
     }
 
+    pub fn get_balance(&self, address: H160) -> U256 {
+        let acc = self.account(&address).unwrap();
+        acc.balance.clone()
+    }
+
     pub fn code(&self, alias: &str) -> Vec<u8> {
         self.accounts.get(alias).unwrap().code.clone()
     }
@@ -157,6 +162,11 @@ impl Blockchain {
         return txhash;
     }
 
+    pub fn storage_at(&mut self, address: Address, data: H256) -> Result<H256, Error> {
+        let sc_deatils = self.storage_at(address, data).unwrap();
+        return Ok(sc_deatils.clone());
+    }
+
     pub fn get_transactiondetails(
         &mut self,
         hash: H256,
@@ -188,6 +198,7 @@ impl StateProvider for Blockchain {
         self.counter = self.counter + 1;
         Ok(())
     }
+
 
     fn storage_at(&self, address: &Address, key: &H256) -> Result<H256, Error> {
         let acc = self.account(address)?;

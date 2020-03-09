@@ -76,6 +76,7 @@ fn main() {
         vec![],
         params2,
     );
+    
     let ret2 = vm.fire(tx2, &mut bc).unwrap();
     info!("ret2: {:?}", ret2);
     bc.incNonce("alice");

@@ -18,6 +18,7 @@ use blockchain::blockchain::Blockchain;
 pub enum Api {
 	/// Transaction methods
 	Transaction
+
 }
 
 #[derive(Debug, PartialEq, Clone)]
@@ -31,17 +32,6 @@ impl Default for ApiSet {
 	}
 }
 
-
-// impl FromStr for Api {
-// 	type Err = String;
-// 	fn from_str(s: &str) -> Result<Self, Self::Err> {
-// 		use self::Api::*;
-// 		match s {
-// 			"transactionRPC" => Ok(Api::Transaction),
-// 			api => Err(format!("Unknown api: {}", api)),
-// 		}
-// 	}
-// }
 
 impl ApiSet {
 	pub fn list_apis(&self) -> HashSet<Api> {

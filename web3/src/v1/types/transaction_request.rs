@@ -1,14 +1,15 @@
 extern crate durian;
-use ethereum_types::{H160, U256};
+use std::ops::Deref;
 use crate::v1;
-use std::fmt;
-use serde_derive::{Deserialize, Serialize};
-use serde_json;
 use ansi_term::Colour;
+use ethereum_types::{Address, H160, H256,H512, U256};
+use serde_derive::{Deserialize, Serialize};
+use std::fmt;
 use v1::helpers;
-use helpers::FilledTransactionRequest;
-use v1::types::{Bytes};
-
+use v1::types::Bytes;
+pub type Public = H512;
+use parity_util_mem::MallocSizeOf;
+use durian::transaction::Transaction;
 
 /// Transaction request coming from RPC
 #[derive(Debug, Clone, Default, Eq, PartialEq, Hash, Serialize, Deserialize)]
@@ -29,7 +30,6 @@ pub struct TransactionRequest {
 	pub data: Option<Bytes>,
 	/// Transaction's nonce
 	pub nonce: Option<U256>,
-
 }
 
 pub fn format_ether(i: U256) -> String {
@@ -56,9 +56,11 @@ impl fmt::Display for TransactionRequest {
 				"{} ETH from {} to 0x{:?}",
 				Colour::White.bold().paint(format_ether(eth)),
 				Colour::White.bold().paint(
-					self.from.as_ref()
+					self.from
+						.as_ref()
 						.map(|f| format!("0x{:?}", f))
-						.unwrap_or_else(|| "?".to_string())),
+						.unwrap_or_else(|| "?".to_string())
+				),
 				to
 			),
 			None => write!(
@@ -66,9 +68,11 @@ impl fmt::Display for TransactionRequest {
 				"{} ETH from {} for contract creation",
 				Colour::White.bold().paint(format_ether(eth)),
 				Colour::White.bold().paint(
-					self.from.as_ref()
+					self.from
+						.as_ref()
 						.map(|f| format!("0x{:?}", f))
-						.unwrap_or_else(|| "?".to_string())),
+						.unwrap_or_else(|| "?".to_string())
+				),
 			),
 		}
 	}
@@ -98,7 +102,6 @@ impl From<helpers::FilledTransactionRequest> for TransactionRequest {
 			value: Some(r.value),
 			data: Some(r.data.into()),
 			nonce: r.nonce,
-
 		}
 	}
 }
@@ -113,7 +116,38 @@ impl Into<helpers::TransactionRequest> for TransactionRequest {
 			value: self.value.map(Into::into),
 			data: self.data.map(Into::into),
 			nonce: self.nonce.map(Into::into),
-
 		}
+	}
+}
+
+/// A `UnverifiedTransaction` with successfully recovered `sender`.
+#[derive(Debug, Clone, Eq, PartialEq, MallocSizeOf)]
+pub struct SignedTransaction {
+	transaction: UnverifiedTransaction,
+	sender: Address,
+	public: Option<Public>,
+}
+
+/// Signed transaction information without verified signature.
+#[derive(Debug, Clone, Eq, PartialEq, MallocSizeOf)]
+pub struct UnverifiedTransaction {
+	/// Plain Transaction.
+	unsigned: Transaction,
+	/// The V field of the signature; the LS bit described which half of the curve our point falls
+	/// in. The MS bits describe which chain this transaction is for. If 27/28, its for all chains.
+	v: u64,
+	/// The R field of the signature; helps describe the point on the curve.
+	r: U256,
+	/// The S field of the signature; helps describe the point on the curve.
+	s: U256,
+	/// Hash of the transaction
+	hash: H256,
+}
+
+impl Deref for UnverifiedTransaction {
+	type Target = Transaction;
+
+	fn deref(&self) -> &Self::Target {
+		&self.unsigned
 	}
 }
