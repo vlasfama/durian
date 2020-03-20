@@ -2,18 +2,16 @@ use common_types::engines::params::CommonParams;
 use error::Error;
 use ethereum_types::{Address, U256};
 use machine::Machine;
+use serde::{Deserialize, Serialize};
 use state_provider::StateProvider;
-use stateless_ext::{StatelessExt, LogEntry};
+use stateless_ext::{LogEntry, StatelessExt};
 use std::collections::BTreeMap;
 use std::sync::Arc;
 use transaction::{Action, Transaction};
 use vm::{ActionParams, ActionValue, CallType, EnvInfo, Exec, GasLeft, ParamsType};
 use wasm::WasmInterpreter;
 
-
-
-
-#[derive(Debug)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ResultData {
     pub gas_left: U256,
     pub data: Vec<u8>,
@@ -54,7 +52,7 @@ impl StatelessVM {
                     code: Some(Arc::new(transaction.code)),
                     data: Some(transaction.params),
                     call_type: CallType::None,
-                    params_type: ParamsType::Separate,
+                    params_type: ParamsType::Embedded,
                     gas_price: U256::zero(),
                     code_hash: None,
                     code_version: U256::zero(),
@@ -121,7 +119,7 @@ impl StatelessVM {
                     apply_state,
                 }) => {
                     if transaction.action == Action::Create {
-                       ext.init_code(&params.address, data.to_vec());
+                        ext.init_code(&params.address, data.to_vec());
                     }
 
                     ext.update_state()?;

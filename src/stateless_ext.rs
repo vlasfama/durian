@@ -10,8 +10,9 @@ use vm::{
     self, ActionParams, CallType, ContractCreateResult, CreateContractAddress, EnvInfo, Ext,
     MessageCallResult, ReturnData, Schedule, TrapKind,
 };
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq,Serialize, Deserialize)]
 pub struct LogEntry {
     pub address: Address,
     pub topics: Vec<H256>,

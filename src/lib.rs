@@ -8,6 +8,11 @@ extern crate trace;
 extern crate vm;
 extern crate wasm;
 extern crate log;
+extern crate bincode;
+extern crate sha3;
+extern crate serde;
+extern crate parity_util_mem;
+
 
 pub mod error;
 pub mod state_cache;
