@@ -1,10 +1,10 @@
-use crate::v1;
+use crate::types;
 use ethereum_types::{H160, H256, U256};
 use jsonrpc_core::{BoxFuture, Result};
 use jsonrpc_derive::rpc;
-use v1::types::CallRequest;
-use v1::types::{BlockNumber, Bytes};
-use v1::types::{TransactionRequest, TxReceipt};
+use types::CallRequest;
+use types::{BlockNumber, Bytes};
+use types::{TransactionRequest, TxReceipt};
 
 #[rpc(server)]
 pub trait TransactionRPC {

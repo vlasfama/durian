@@ -1,11 +1,7 @@
 //! Transport-specific metadata extractors.
 
-use jsonrpc_core;
 use http;
-use http::{hyper};
-use crate::v1;
-use v1::Metadata;
-
+use http::hyper;
 
 /// HTTP RPC server impl-independent metadata extractor
 pub trait HttpMetaExtractor: Send + Sync + 'static {
@@ -25,7 +21,8 @@ impl<T> MetaExtractor<T> {
 	}
 }
 
-impl<M, T> http::MetaExtractor<M> for MetaExtractor<T> where
+impl<M, T> http::MetaExtractor<M> for MetaExtractor<T>
+where
 	T: HttpMetaExtractor<Metadata = M>,
 	M: jsonrpc_core::Metadata,
 {

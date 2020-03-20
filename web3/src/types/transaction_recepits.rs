@@ -1,6 +1,6 @@
-use ethereum_types::{Address, H160, H256, H520, U256, U64};
+use ethereum_types::{Address, H160, H256, U256};
 use serde_derive::{Deserialize, Serialize};
-use serde_json;
+
 /// Transaction request coming from RPC
 #[derive(Debug, Clone, Default, Eq, PartialEq, Hash, Serialize, Deserialize)]
 pub struct TxReceipt {

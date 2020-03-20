@@ -1,8 +1,9 @@
-use crate::v1;
+use crate::helpers;
+use crate::types;
 use ethereum_types::{H160, U256};
-use serde_derive::{Deserialize, Serialize};
-use v1::helpers::request::CallRequest as Request;
-use v1::types::Bytes;
+use helpers::request::CallRequest as Request;
+use serde_derive::Deserialize;
+use types::Bytes;
 
 /// Call request
 #[derive(Debug, Default, PartialEq, Deserialize)]

@@ -1,16 +1,12 @@
 use jsonrpc_core;
-use jsonrpc_http_server::{self, Server, ServerBuilder};
-use std::io;
 use std::net::SocketAddr;
-use std::path::{Path, PathBuf};
-use v1::Metadata;
 extern crate jsonrpc_derive;
 extern crate jsonrpc_http_server as http;
+use crate::extractors;
 use crate::http_common;
-use crate::v1;
 use http_common::HttpMetaExtractor;
 
-pub use v1::extractors::RpcExtractor;
+pub use extractors::RpcExtractor;
 
 pub use http::{
 	cors::AccessControlAllowHeaders, hyper, AccessControlAllowOrigin, DomainsValidation, Host,

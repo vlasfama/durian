@@ -1,14 +1,10 @@
-use crate::rpc_apis::{self, Api, ApiSet};
+use crate::rpc_apis::{self, ApiSet};
 use crate::rpc_service::{self as rpc, start_http};
-use crate::v1::{extractors, Metadata};
-use extractors::RpcExtractor;
+use blockchain::blockchain::Blockchain;
 use jsonrpc_core::{Compatibility, MetaIoHandler};
 pub use jsonrpc_http_server::{DomainsValidation, Server};
 use std::collections::HashSet;
 use std::io;
-use std::net::SocketAddr;
-use std::sync::Arc;
-use blockchain::blockchain::Blockchain;
 
 /// RPC HTTP Server instance
 // pub type HttpServer = http::Server;
@@ -64,7 +60,7 @@ pub fn new_http(
 	let handler = rpc_apis::setup_rpc(
 		MetaIoHandler::with_compatibility(Compatibility::Both),
 		conf.apis,
-		bc
+		bc,
 	);
 
 	let cors_domains = into_domains(conf.cors);

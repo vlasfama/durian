@@ -1,17 +1,19 @@
 extern crate durian;
 use crate::contract_call::{create, transaction_recipit};
-use crate::v1;
+use crate::metadata;
+use crate::traits;
+use crate::types;
 use blockchain::blockchain::Blockchain;
 use durian::stateless_vm::StatelessVM;
 use durian::transaction::Transaction;
-use ethereum_types::{Address, H160, H256, H520, U256};
+use ethereum_types::{H160, H256,U256};
 use jsonrpc_core::futures::future;
 use jsonrpc_core::{BoxFuture, Result};
-use std::sync::{Arc, Mutex};
-use v1::metadata::Metadata;
-use v1::traits::TransactionRPC;
-use v1::types::{BlockNumber, Bytes};
-use v1::types::{CallRequest, TransactionRequest, TxReceipt};
+use std::sync::{Mutex};
+use metadata::Metadata;
+use traits::TransactionRPC;
+use types::{BlockNumber, Bytes};
+use types::{CallRequest, TransactionRequest, TxReceipt};
 
 pub struct TransactionRPCImpl {
 	bc: Mutex<Blockchain>,

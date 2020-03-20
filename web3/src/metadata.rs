@@ -1,8 +1,7 @@
 //! Durian RPC requests Metadata.
-use std::sync::Arc;
-use crate::v1;
+use crate::types;
 use jsonrpc_core;
-use v1::types::Origin;
+use types::Origin;
 
 
 /// RPC methods metadata.

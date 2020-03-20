@@ -1,15 +1,15 @@
 extern crate durian;
-use std::ops::Deref;
-use crate::v1;
+use crate::helpers;
+use crate::types;
 use ansi_term::Colour;
-use ethereum_types::{Address, H160, H256,H512, U256};
+use ethereum_types::{Address, H160, H256, H512, U256};
 use serde_derive::{Deserialize, Serialize};
 use std::fmt;
-use v1::helpers;
-use v1::types::Bytes;
+use std::ops::Deref;
+use types::Bytes;
 pub type Public = H512;
-use parity_util_mem::MallocSizeOf;
 use durian::transaction::Transaction;
+use parity_util_mem::MallocSizeOf;
 
 /// Transaction request coming from RPC
 #[derive(Debug, Clone, Default, Eq, PartialEq, Hash, Serialize, Deserialize)]

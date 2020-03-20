@@ -1,9 +1,6 @@
-
-use ethereum_types::{U256, H256, Address};
-use crate::v1;
-use v1::types::{Bytes};
-
-
+use crate::types;
+use ethereum_types::{Address, U256};
+use types::Bytes;
 
 /// Transaction request coming from RPC
 #[derive(Debug, Clone, Default, Eq, PartialEq, Hash)]
@@ -21,11 +18,8 @@ pub struct TransactionRequest {
 	/// Additional data sent with transaction
 	pub data: Option<Bytes>,
 	/// Transaction's nonce
-	pub nonce: Option<U256>
-
-
+	pub nonce: Option<U256>,
 }
-
 
 /// Transaction request coming from RPC with default values filled in.
 #[derive(Debug, Clone, Default, Eq, PartialEq, Hash)]
@@ -45,8 +39,7 @@ pub struct FilledTransactionRequest {
 	/// Additional data sent with transaction
 	pub data: Bytes,
 	/// Transaction's nonce
-	pub nonce: Option<U256>
-
+	pub nonce: Option<U256>,
 }
 
 /// Call request
@@ -78,7 +71,6 @@ impl From<FilledTransactionRequest> for TransactionRequest {
 			value: Some(r.value),
 			data: Some(r.data),
 			nonce: r.nonce,
-
 		}
 	}
 }

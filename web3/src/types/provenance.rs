@@ -17,7 +17,6 @@
 //! Request Provenance
 
 use std::fmt;
-use ethereum_types::H256;
 use serde::{Serialize, Deserialize};
 /// RPC request origin
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -26,21 +25,7 @@ use serde::{Serialize, Deserialize};
 pub enum Origin {
 	/// RPC server (includes request origin)
 	Rpc(String),
-	/// IPC server (includes session hash)
-	Ipc(H256),
-	/// WS server
-	Ws {
-		/// Session id
-		session: H256,
-	},
-	/// Signer (authorized WS server)
-	Signer {
-		/// Session id
-		session: H256
-	},
-	/// From the C API
-	CApi,
-	/// Unknown
+
 	Unknown,
 }
 
@@ -54,10 +39,6 @@ impl fmt::Display for Origin {
 	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
 		match *self {
 			Origin::Rpc(ref origin) => write!(f, "{} via RPC", origin),
-			Origin::Ipc(ref session) => write!(f, "IPC (session: {})", session),
-			Origin::Ws { ref session } => write!(f, "WebSocket (session: {})", session),
-			Origin::Signer { ref session } => write!(f, "Secure Session (session: {})", session),
-			Origin::CApi => write!(f, "C API"),
 			Origin::Unknown => write!(f, "unknown origin"),
 		}
 	}

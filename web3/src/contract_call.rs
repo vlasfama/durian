@@ -1,29 +1,24 @@
 extern crate blockchain;
 extern crate durian;
-use crate::v1;
+use crate::types;
 use blockchain::blockchain::Blockchain;
 use durian::stateless_vm::StatelessVM;
 use durian::transaction::Transaction;
-use ethereum_types::{H160, H256, U256, U64};
-use jsonrpc_core::futures::future;
-use jsonrpc_core::{BoxFuture, Params};
+use ethereum_types::{H160, H256, U256};
 use std::io;
-use v1::types::{TransactionRequest, TxReceipt};
+use types::{TransactionRequest, TxReceipt};
 
 //deploy the contract
 pub fn create(bc: &mut Blockchain, request: TransactionRequest) -> Result<H256, io::Error> {
-	let mut bc = bc;
 	let vm = StatelessVM::new();
 	let from = request.from.unwrap();
 	let data = request.data.unwrap();
 	let value = request.value.unwrap_or(U256::zero());
-	let gas_price = request.gas_price.unwrap();
 	let gas = request.gas.unwrap();
 	let code = data.into_vec();
 	bc.commit();
 	let tx1 = Transaction::create(from, value, gas, code, vec![]);
 	let ret1 = vm.fire(tx1.clone(), bc).unwrap();
-	let contract_address = ret1.contract;
 	let tx_hash = bc.add_transactions(tx1, ret1);
 	bc.incNonce("naga");
 	bc.commit();
@@ -52,4 +47,3 @@ pub fn transaction_recipit(bc: &mut Blockchain, params: H256) -> Result<TxReceip
 	};
 	Ok(receipt)
 }
-
