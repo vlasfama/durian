@@ -27,4 +27,6 @@ pub trait TransactionRPC {
 	/// Call contract, returning the output data.
 	#[rpc(name = "eth_call")]
 	fn call(&self, call: CallRequest, bn: Option<BlockNumber>) -> Result<Bytes>;
+
+
 }

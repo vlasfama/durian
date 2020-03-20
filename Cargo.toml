@@ -16,9 +16,6 @@ hex-literal = "0.2.1"
 primitive-types = "0.1.5"
 parity-util-mem = "0.5.1"
 
-
-
-
 [dependencies.ethcore-miner]
 git = "https://github.com/b00f/parity-ethereum.git"
 

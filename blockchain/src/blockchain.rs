@@ -199,7 +199,6 @@ impl StateProvider for Blockchain {
         Ok(())
     }
 
-
     fn storage_at(&self, address: &Address, key: &H256) -> Result<H256, Error> {
         let acc = self.account(address)?;
         match acc.storage.get(key) {

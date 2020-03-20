@@ -56,7 +56,6 @@ impl TransactionRPC for TransactionRPCImpl {
 	}
 
 	fn call(&self, request: CallRequest, num: Option<BlockNumber>) -> Result<Bytes> {
-
 		let vm = StatelessVM::new();
 		let mut bc = self.bc.lock().unwrap();
 
@@ -78,6 +77,5 @@ impl TransactionRPC for TransactionRPCImpl {
 		let res = Bytes::new(ret3.data);
 		Ok(res)
 	}
-
 
 }
