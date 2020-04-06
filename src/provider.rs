@@ -7,7 +7,7 @@ pub struct StateAccount {
     pub code: Vec<u8>,
 }
 
-pub trait StateProvider {
+pub trait Provider {
     fn account(&self, address: &Address) -> Result<StateAccount, Error>;
     fn storage_at(&self, address: &Address, key: &H256) -> Result<H256, Error>;
     fn blockhash(&self, num: i64) -> U512;

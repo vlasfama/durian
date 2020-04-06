@@ -1,17 +1,19 @@
-use common_types::engines::params::CommonParams;
-use error::Error;
-use ethereum_types::{Address, U256};
-use machine::Machine;
+use error::{Error, Result};
+use ethereum_types::{Address, H256, U256};
+use interpreter::Interpreter;
+use keccak_hash::write_keccak;
+use log_entry::LogEntry;
+use schedule::Schedule;
 use serde::{Deserialize, Serialize};
 use state_provider::StateProvider;
-use stateless_ext::{LogEntry, StatelessExt};
 use std::collections::BTreeMap;
 use std::sync::Arc;
 use transaction::{Action, Transaction};
-use vm::{ActionParams, ActionValue, CallType, EnvInfo, Exec, GasLeft, ParamsType};
-use wasm::WasmInterpreter;
+use types::{ActionParams, ActionType, ActionValue, GasLeft, ParamsType};
+use utils;
+use wasm_cost::WasmCosts;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct ResultData {
     pub gas_left: U256,
     pub data: Vec<u8>,
@@ -29,17 +31,17 @@ impl StatelessVM {
 
     pub fn fire<T: StateProvider>(
         &self,
-        transaction: Transaction,
+        transaction: &Transaction,
         provider: &mut T,
-    ) -> ::std::result::Result<ResultData, Error> {
+    ) -> Result<ResultData> {
         let params = match transaction.action {
             Action::Create => {
                 let acc = provider.account(&transaction.sender)?;
-                let (new_address, _) = machine::executive::contract_address(
-                    vm::CreateContractAddress::FromSenderAndNonce,
+                let new_address = utils::contract_address(
                     &transaction.sender,
                     &acc.nonce,
-                    &vec![],
+                    &transaction.code,
+                    &H256::zero(), // TODO: SALT should be passed through the transaction????
                 );
 
                 ActionParams {
@@ -51,7 +53,7 @@ impl StatelessVM {
                     value: ActionValue::Transfer(transaction.value),
                     code: Some(Arc::new(transaction.code)),
                     data: Some(transaction.params),
-                    call_type: CallType::None,
+                    action_type: ActionType::Create,
                     params_type: ParamsType::Embedded,
                     gas_price: U256::zero(),
                     code_hash: None,
@@ -75,7 +77,7 @@ impl StatelessVM {
                     value: ActionValue::Transfer(transaction.value),
                     code: Some(Arc::new(code)),
                     data: Some(transaction.params),
-                    call_type: CallType::Call,
+                    action_type: ActionType::Call,
                     params_type: ParamsType::Separate,
                     gas_price: U256::zero(),
                     code_hash: None,
@@ -84,64 +86,43 @@ impl StatelessVM {
             }
         };
 
-        let mut env_info = EnvInfo::default();
-        // TODO:::::
-        env_info.timestamp = 111;
-        env_info.gas_limit = U256::from(100000000);
-        env_info.number = 1;
-
-        let machine_params = CommonParams::default();
-        let builtins = BTreeMap::default();
-        let machine = Machine::regular(machine_params, builtins);
-        let mut schedule = machine.schedule(env_info.number);
-        let depth = 0;
-
-        let wasm = vm::WasmCosts::default();
+        let mut schedule = Schedule::default();
+        let wasm = WasmCosts::default();
         schedule.wasm = Some(wasm);
 
-        let mut ext = StatelessExt::new(&env_info, &machine, &schedule, depth, &params, provider);
+        let interpreter = Interpreter::new(params.clone());
 
-        let interpreter = Box::new(WasmInterpreter::new(params.clone()));
+        let ret = interpreter.run(provider, &schedule)?;
 
-        let ret = interpreter.exec(&mut ext);
         match ret {
-            Ok(val) => match val {
-                Ok(GasLeft::Known(gas_left)) => Ok(ResultData {
+            GasLeft::Known(gas_left) => Ok(ResultData {
+                gas_left,
+                apply_state: true,
+                data: vec![],
+                contract: params.address,
+                // TODO::::: logs????
+                logs: vec![],// ext.logs().to_vec(),
+            }),
+            GasLeft::NeedsReturn {
+                gas_left,
+                data,
+                apply_state,
+            } => {
+                // TODO: Can we move it to runtime?
+                //if transaction.action == Action::Create {
+                //    provider.create_contract(&params.address, 0, data.to_vec());
+                //}
+
+                //ext.update_state()?;
+
+                Ok(ResultData {
                     gas_left,
-                    apply_state: true,
-                    data: vec![],
+                    apply_state: apply_state,
+                    data: data.to_vec(),
                     contract: params.address,
                     logs: ext.logs().to_vec(),
-                }),
-                Ok(GasLeft::NeedsReturn {
-                    gas_left,
-                    data,
-                    apply_state,
-                }) => {
-                    if transaction.action == Action::Create {
-                        ext.init_code(&params.address, data.to_vec());
-                    }
-
-                    ext.update_state()?;
-
-                    Ok(ResultData {
-                        gas_left,
-                        apply_state: apply_state,
-                        data: data.to_vec(),
-                        contract: params.address,
-                        logs: ext.logs().to_vec(),
-                    })
-                }
-                Err(err) => Err(Error::InternalError(err.to_string())),
-            },
-            Err(err) => match err {
-                vm::TrapError::Call(params, _call) => {
-                    Err(Error::InternalError(format!("Error on call: {:?}", params)))
-                }
-                vm::TrapError::Create(params, address, _create) => Err(Error::InternalError(
-                    format!("Error on create at {:?}: {:?}", address, params),
-                )),
-            },
+                })
+            }
         }
     }
 }

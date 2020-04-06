@@ -1,8 +1,8 @@
 use ethereum_types::{Address, H256, U256, U512};
 use log::{debug};
-use state_provider::StateProvider;
+use provider::Provider;
 use std::collections::HashMap;
-use error::Error;
+use error::{Error, Result};
 
 #[derive(Debug, Clone, PartialEq)]
 struct AccountInfo {
@@ -23,33 +23,31 @@ impl AccountInfo {
     }
 }
 
-pub struct StateCache<'a, T: StateProvider> {
-    provider: &'a mut T,
+pub struct Cache<'a> {
+    provider: &'a mut dyn Provider,
     accounts: HashMap<Address, (AccountInfo, bool)>,
 }
 
-impl<'a, T> StateCache<'a, T>
-where
-    T: StateProvider,
+impl<'a> Cache<'a>
 {
-    pub fn new(provider: &'a mut T) -> Self {
-        StateCache {
+    pub fn new(provider: &'a mut dyn Provider) -> Self {
+        Cache {
             provider: provider,
             accounts: HashMap::new(),
         }
     }
 
-    pub fn nonce(&mut self, address: &Address) -> vm::Result<U256> {
+    pub fn nonce(&mut self, address: &Address) -> Result<U256> {
         let acc = self.account(address)?;
         Ok(acc.nonce)
     }
 
-    pub fn balance(&mut self, address: &Address) -> vm::Result<U256> {
+    pub fn balance(&mut self, address: &Address) -> Result<U256> {
         let acc = self.account(address)?;
         Ok(acc.balance)
     }
 
-    pub fn storage_at(&mut self, address: &Address, key: &H256) -> vm::Result<H256> {
+    pub fn storage_at(&mut self, address: &Address, key: &H256) -> Result<H256> {
         // From parity ethereum
         // If storage root is empty RLP, then early return zero value. Practically, this makes it so that if
         // `original_storage_cache` is used, then `storage_cache` will always remain empty.
@@ -78,25 +76,26 @@ where
         false
     }
 
-    fn account_mut(&mut self, address: &Address) -> vm::Result<&mut (AccountInfo, bool)> {
+    fn account_mut(&mut self, address: &Address) -> Result<&mut (AccountInfo, bool)> {
         self.fetch_account(address)?;
 
         return Ok(self.accounts.get_mut(address).unwrap());
     }
 
-    fn account(&mut self, address: &Address) -> vm::Result<&AccountInfo> {
+    fn account(&mut self, address: &Address) -> Result<&AccountInfo> {
         self.fetch_account(address)?;
 
         return Ok(&self.accounts.get(address).unwrap().0);
     }
 
-    pub fn init_code(&mut self, address: &Address, code: Vec<u8>) {
-        let mut acc = self.account_mut(address).unwrap();
-        acc.0.code = code;
-        acc.1 = true;
-    }
+    // TODO:??? can we remove it to runtime and delete this func
+    //pub fn init_code(&mut self, address: &Address, code: Vec<u8>) {
+    //    let mut acc = self.account_mut(address).unwrap();
+    //    acc.0.code = code;
+    //    acc.1 = true;
+    //}
 
-    pub fn update_state(&mut self) -> Result<(), Error>{
+    pub fn update_state(&mut self) -> Result<()>{
         for (addr, acc) in &self.accounts {
             if acc.1 {
                 if !self.provider.exist(addr) {
@@ -117,7 +116,7 @@ where
     }
 
 
-    fn fetch_account(&mut self, address: &Address) -> vm::Result<()> {
+    fn fetch_account(&mut self, address: &Address) -> Result<()> {
         if self.accounts.contains_key(address) {
             return Ok(());
         }
@@ -133,7 +132,7 @@ where
         }
     }
 
-    fn fetch_storage(&mut self, address: &Address, key: &H256) -> vm::Result<()> {
+    fn fetch_storage(&mut self, address: &Address, key: &H256) -> Result<()> {
         let acc = self.account(address)?;
         if acc.storage.contains_key(key) {
             return Ok(());

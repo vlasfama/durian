@@ -6,8 +6,8 @@ extern crate sha3;
 extern crate time;
 
 use durian::error::Error;
-use durian::state_provider::{StateAccount, StateProvider};
-use durian::stateless_vm::ResultData;
+use durian::provider::{StateAccount, Provider};
+use durian::execute::ResultData;
 use durian::transaction::Transaction;
 use ethereum_types::{Address, H160, H256, U256, U512};
 use serde::{Deserialize, Serialize};
@@ -135,7 +135,7 @@ impl Blockchain {
             }
         }
 
-        Err(Error::InvalidAddress)
+        Err(Error::InvalidAddress{address: *address})
     }
 
     fn account_mut(&mut self, address: &Address) -> Result<&mut Account, Error> {
@@ -145,7 +145,7 @@ impl Blockchain {
             }
         }
 
-        Err(Error::InvalidAddress)
+        Err(Error::InvalidAddress{address: *address})
     }
 
     pub fn last_block_hash(&self) -> Hash {
@@ -176,7 +176,7 @@ impl Blockchain {
     }
 }
 
-impl StateProvider for Blockchain {
+impl Provider for Blockchain {
     fn account(&self, address: &Address) -> Result<StateAccount, Error> {
         let acc = self.account(address)?;
         Ok(StateAccount {
@@ -203,7 +203,7 @@ impl StateProvider for Blockchain {
         let acc = self.account(address)?;
         match acc.storage.get(key) {
             Some(storage) => Ok(*storage),
-            _ => Err(Error::InvalidStorageKey),
+            _ => Err(Error::InvalidStorageKey{key: *key}),
         }
     }
 

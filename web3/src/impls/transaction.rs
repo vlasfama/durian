@@ -4,7 +4,7 @@ use crate::metadata;
 use crate::traits;
 use crate::types;
 use blockchain::blockchain::Blockchain;
-use durian::stateless_vm::StatelessVM;
+use durian::execute;
 use durian::transaction::Transaction;
 use ethereum_types::{H160, H256,U256};
 use jsonrpc_core::futures::future;
@@ -58,23 +58,22 @@ impl TransactionRPC for TransactionRPCImpl {
 	}
 
 	fn call(&self, request: CallRequest, num: Option<BlockNumber>) -> Result<Bytes> {
-		let vm = StatelessVM::new();
 		let mut bc = self.bc.lock().unwrap();
 
 		let contract_address = request.to.unwrap();
 		let params = request.data.unwrap();
 		let params_vec = Bytes::into_vec(params);
 
-		let tx_call = Transaction::call(
+		let tx_call = Transaction::make_call(
 			bc.address("naga"),
 			contract_address,
 			U256::zero(),
 			U256::from(1000000),
-			vec![],
-			params_vec,
+			U256::zero(),
+			params_vec
 		);
 
-		let ret3 = vm.fire(tx_call, &mut *bc).unwrap();
+		let ret3 = execute::execute(&tx_call, &mut *bc).unwrap();
 		println!("the value inside ret3 {:?}", ret3);
 		let res = Bytes::new(ret3.data);
 		Ok(res)

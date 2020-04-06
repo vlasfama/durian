@@ -9,7 +9,7 @@ use std::ops::Deref;
 use types::Bytes;
 pub type Public = H512;
 use durian::transaction::Transaction;
-use parity_util_mem::MallocSizeOf;
+//use parity_util_mem::MallocSizeOf;
 
 /// Transaction request coming from RPC
 #[derive(Debug, Clone, Default, Eq, PartialEq, Hash, Serialize, Deserialize)]
@@ -121,7 +121,7 @@ impl Into<helpers::TransactionRequest> for TransactionRequest {
 }
 
 /// A `UnverifiedTransaction` with successfully recovered `sender`.
-#[derive(Debug, Clone, Eq, PartialEq, MallocSizeOf)]
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub struct SignedTransaction {
 	transaction: UnverifiedTransaction,
 	sender: Address,
@@ -129,7 +129,7 @@ pub struct SignedTransaction {
 }
 
 /// Signed transaction information without verified signature.
-#[derive(Debug, Clone, Eq, PartialEq, MallocSizeOf)]
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub struct UnverifiedTransaction {
 	/// Plain Transaction.
 	unsigned: Transaction,

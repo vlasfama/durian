@@ -1,18 +1,18 @@
-use error::Error;
+/*
+use super::error::{Error, Result};
+use super::types::{
+    ActionParams, ActionType, ContractCreateResult, MessageCallResult, ReturnData, TrapKind,
+};
 use ethereum_types::{Address, H256, U256};
-use machine::Machine;
 use parity_bytes::Bytes;
-use state_cache::StateCache;
+use schedule::Schedule;
+use serde::{Deserialize, Serialize};
+use cache::Cache;
 use state_provider::StateProvider;
 use std::cell::RefCell;
 use std::sync::Arc;
-use vm::{
-    self, ActionParams, CallType, ContractCreateResult, CreateContractAddress, EnvInfo, Ext,
-    MessageCallResult, ReturnData, Schedule, TrapKind,
-};
-use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, PartialEq, Eq,Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct LogEntry {
     pub address: Address,
     pub topics: Vec<H256>,
@@ -23,12 +23,10 @@ pub struct StatelessExt<'a, SP: 'a>
 where
     SP: StateProvider,
 {
-    env_info: &'a EnvInfo,
     depth: usize,
     //stack_depth: usize,
     params: &'a ActionParams,
     //substate: &'a mut Substate,
-    machine: &'a Machine,
     schedule: &'a Schedule,
     //output: OutputPolicy,
     //tracer: &'a mut T,
@@ -36,7 +34,7 @@ where
     //state_provider: &'a S,
     //static_flag: bool,
     //  storageProvider: StateProvider;
-    cache: RefCell<StateCache<'a, SP>>,
+    cache: RefCell<Cache<'a, SP>>,
     logs: Vec<LogEntry>,
 }
 
@@ -45,8 +43,6 @@ where
     SP: StateProvider,
 {
     pub fn new(
-        env_info: &'a EnvInfo,
-        machine: &'a Machine,
         schedule: &'a Schedule,
         depth: usize,
         //stack_depth: usize,
@@ -62,12 +58,10 @@ where
         let logs = vec![];
 
         StatelessExt {
-            env_info,
             depth,
             //stack_depth,
             params,
             //substate,
-            machine,
             schedule,
             //output,
             //tracer,
@@ -82,7 +76,7 @@ where
         self.cache.borrow_mut().init_code(address, code);
     }
 
-    pub fn update_state(&mut self) -> Result<(), Error> {
+    pub fn update_state(&mut self) -> Result<()> {
         self.cache.borrow_mut().update_state()?;
         Ok(())
     }
@@ -90,13 +84,8 @@ where
     pub fn logs(&self) -> &Vec<LogEntry> {
         &self.logs
     }
-}
 
-impl<'a, SP: 'a> Ext for StatelessExt<'a, SP>
-where
-    SP: StateProvider,
-{
-    fn initial_storage_at(&self, key: &H256) -> vm::Result<H256> {
+    fn initial_storage_at(&self, key: &H256) -> Result<H256> {
         println!("hello");
         /*if self.state.is_base_storage_root_unchanged(&self.origin_info.address)? {
             self.state.checkpoint_storage_at(0, &self.origin_info.address, key).map(|v| v.unwrap_or_default()).map_err(Into::into)
@@ -108,38 +97,38 @@ where
         Ok(H256::zero())
     }
 
-    fn storage_at(&self, key: &H256) -> vm::Result<H256> {
+    fn storage_at(&self, key: &H256) -> Result<H256> {
         self.cache
             .borrow_mut()
             .storage_at(&self.params.address, key)
     }
 
-    fn set_storage(&mut self, key: H256, value: H256) -> vm::Result<()> {
+    fn set_storage(&mut self, key: H256, value: H256) -> Result<()> {
         self.cache
             .borrow_mut()
             .set_storage(&self.params.address, &key, &value);
         Ok(())
     }
 
-    fn exists(&self, address: &Address) -> vm::Result<bool> {
+    fn exists(&self, address: &Address) -> Result<bool> {
         println!("hello");
         //self.state.exists(address).map_err(Into::into)
         Ok(true)
     }
 
-    fn exists_and_not_null(&self, address: &Address) -> vm::Result<bool> {
+    fn exists_and_not_null(&self, address: &Address) -> Result<bool> {
         println!("hello");
         //self.state.exists_and_not_null(address).map_err(Into::into)
         Ok(true)
     }
 
-    fn origin_balance(&self) -> vm::Result<U256> {
+    fn origin_balance(&self) -> Result<U256> {
         println!("hello");
         //self.balance(&self.origin_info.address).map_err(Into::into)
         Ok(U256::zero())
     }
 
-    fn balance(&self, address: &Address) -> vm::Result<U256> {
+    fn balance(&self, address: &Address) -> Result<U256> {
         println!("hello");
         //self.state.balance(address).map_err(Into::into)
         Ok(U256::zero())
@@ -155,7 +144,7 @@ where
         value: &U256,
         code: &[u8],
         parent_version: &U256,
-        address_scheme: CreateContractAddress,
+        //address_scheme: CreateContractAddress,
         trap: bool,
     ) -> ::std::result::Result<ContractCreateResult, TrapKind> {
         println!("hello");
@@ -170,27 +159,27 @@ where
         value: Option<U256>,
         data: &[u8],
         code_address: &Address,
-        call_type: CallType,
+        action_type: ActionType,
         trap: bool,
     ) -> ::std::result::Result<MessageCallResult, TrapKind> {
         println!("hello");
         Ok(MessageCallResult::Failed)
     }
 
-    fn extcode(&self, address: &Address) -> vm::Result<Option<Arc<Bytes>>> {
+    fn extcode(&self, address: &Address) -> Result<Option<Arc<Bytes>>> {
         println!("hello");
         Ok(None)
     }
 
-    fn extcodehash(&self, address: &Address) -> vm::Result<Option<H256>> {
+    fn extcodehash(&self, address: &Address) -> Result<Option<H256>> {
         Ok(None)
     }
 
-    fn extcodesize(&self, address: &Address) -> vm::Result<Option<usize>> {
+    fn extcodesize(&self, address: &Address) -> Result<Option<usize>> {
         Ok(None)
     }
 
-    fn log(&mut self, topics: Vec<H256>, data: &[u8]) -> vm::Result<()> {
+    fn log(&mut self, topics: Vec<H256>, data: &[u8]) -> Result<()> {
         let address = self.params.address.clone();
         self.logs.push(LogEntry {
             address,
@@ -201,28 +190,32 @@ where
         Ok(())
     }
 
-    fn ret(self, gas: &U256, data: &ReturnData, apply_state: bool) -> vm::Result<U256>
+    fn ret(self, gas: &U256, data: &ReturnData, apply_state: bool) -> Result<U256>
     where
         Self: Sized,
     {
         Ok(U256::zero())
     }
 
-    fn suicide(&mut self, refund_address: &Address) -> vm::Result<()> {
+    fn suicide(&mut self, refund_address: &Address) -> Result<()> {
         println!("hello");
         Ok(())
     }
 
-    fn schedule(&self) -> &Schedule {
-        &self.schedule
-    }
+    // TODO:
+    ///fn schedule(&self) -> &Schedule {
+    ///    &self.schedule
+    ///}
 
-    fn env_info(&self) -> &EnvInfo {
-        self.env_info
-    }
+    // TODO:
+    //fn env_info(&self) -> &EnvInfo {
+    //    self.env_info
+    //}
 
     fn chain_id(&self) -> u64 {
-        self.machine.params().chain_id
+        //TODO
+        //self.machine.params().chain_id
+        0
     }
 
     fn depth(&self) -> usize {
@@ -268,3 +261,4 @@ where
         return false;
     }
 }
+*/
