@@ -88,12 +88,11 @@ impl<'a> Cache<'a>
         return Ok(&self.accounts.get(address).unwrap().0);
     }
 
-    // TODO:??? can we remove it to runtime and delete this func
-    //pub fn init_code(&mut self, address: &Address, code: Vec<u8>) {
-    //    let mut acc = self.account_mut(address).unwrap();
-    //    acc.0.code = code;
-    //    acc.1 = true;
-    //}
+    pub fn init_code(&mut self, address: &Address, code: Vec<u8>) {
+        let mut acc = self.account_mut(address).unwrap();
+        acc.0.code = code;
+        acc.1 = true;
+    }
 
     pub fn update_state(&mut self) -> Result<()>{
         for (addr, acc) in &self.accounts {

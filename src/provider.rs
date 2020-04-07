@@ -10,7 +10,7 @@ pub struct StateAccount {
 pub trait Provider {
     fn account(&self, address: &Address) -> Result<StateAccount, Error>;
     fn storage_at(&self, address: &Address, key: &H256) -> Result<H256, Error>;
-    fn blockhash(&self, num: i64) -> U512;
+    fn blockhash(&self, num: i64) -> H256;
     fn exist(&self, address: &Address) -> bool;
     fn create_contract(
         &mut self,

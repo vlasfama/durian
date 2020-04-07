@@ -1,32 +1,24 @@
-extern crate blockchain;
 extern crate durian;
-
-#[macro_use]
-extern crate log;
 extern crate ethereum_types;
 extern crate simple_logger;
-extern crate web3;
+extern crate blockchain;
+#[macro_use]
+extern crate log;
 
 use blockchain::blockchain::Blockchain;
 use durian::execute;
 use durian::transaction::Transaction;
-use ethereum_types::{U256, H256};
+use ethereum_types::{H256, U256};
 use log::Level;
 use std::fs::File;
 use std::io::Read;
-use web3::rpc;
-mod event_loop;
 
 fn main() {
     simple_logger::init_with_level(Level::Debug).unwrap();
 
     let mut bc = Blockchain::new();
-    //let mut el = event_loop::event_loop();
-    //let conf = rpc::HttpConfiguration::default();
-    //let server = rpc::new_http("HTTP JSON-RPC", "jsonrpc", conf);
-    // el.run(event_loop::forever()).unwrap();
 
-    let file_path = "./compiled-contract/erc20.wasm";
+    let file_path = "./compiled-contracts/token.wasm";
     let mut file = match File::open(file_path) {
         Ok(file) => file,
         Err(err) => panic!(err.to_string()),
@@ -54,8 +46,8 @@ fn main() {
     );
 
     let ret1 = execute::execute(&tx1, &mut bc).unwrap();
-    info!("ret1: {:?}", ret1);
-    bc.incNonce("alice");
+    //info!("ret1: {:?}", ret1);
+    bc.inc_nonce("alice");
     bc.commit();
 
     // transfer to bob: 0xa9059cbb
@@ -79,7 +71,7 @@ fn main() {
 
     let ret2 = execute::execute(&tx2, &mut bc).unwrap();
     info!("ret2: {:?}", ret2);
-    bc.incNonce("alice");
+    bc.inc_nonce("alice");
     bc.commit();
 
     // total_supply: 0x18160ddd
@@ -94,7 +86,7 @@ fn main() {
     );
     let ret3 = execute::execute(&tx3, &mut bc).unwrap();
     info!("ret3: {:?}", ret3);
-    bc.incNonce("alice");
+    bc.inc_nonce("alice");
     bc.commit();
 
     // balance_f: 0x70a08231
@@ -111,6 +103,6 @@ fn main() {
     );
     let ret4 = execute::execute(&tx4, &mut bc).unwrap();
     info!("ret4: {:?}", ret4);
-    bc.incNonce("bob");
+    bc.inc_nonce("bob");
     bc.commit();
 }

@@ -197,8 +197,8 @@ impl<'a> Runtime<'a> {
 	}
 
 	/// Destroy the runtime, returning currently recorded result of the execution
-	pub fn into_result(self) -> Vec<u8> {
-		self.result
+	pub fn into_result(&self) -> Vec<u8> {
+		self.result.clone()
 	}
 
 	/// Query current gas left for execution
@@ -670,6 +670,14 @@ impl<'a> Runtime<'a> {
 	fn add_sstore_refund(&mut self, value: usize) {
 		// TODO: Better calculate the gas after flushing the cache
 		//self.substate.sstore_clears_refund += value as i128;
+	}
+
+	pub fn init_code(&mut self, address: &Address, code: Vec<u8>) {
+        self.cache.init_code(address, code);
+	}
+
+	pub fn update_state(&mut self) -> Result<()>{
+		self.cache.update_state()
 	}
 }
 

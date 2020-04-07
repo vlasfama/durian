@@ -83,10 +83,4 @@ impl Transaction {
             args,
         }
     }
-
-    // TODO: move this function out of transaction
-    pub fn hash(&self) -> H256 {
-        let bytes = bincode::serialize(self).unwrap();
-        H256::from_slice(Keccak256::digest(&bytes).as_slice())
-    }
 }

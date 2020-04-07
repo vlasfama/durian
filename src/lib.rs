@@ -3,10 +3,8 @@ extern crate byteorder;
 #[macro_use]
 extern crate log;
 
-extern crate bincode;
 extern crate ethereum_types;
 extern crate keccak_hash;
-extern crate parity_util_mem;
 extern crate parity_wasm;
 extern crate pwasm_utils;
 extern crate serde;
@@ -27,7 +25,6 @@ mod panic_payload;
 mod parser;
 mod runtime;
 mod schedule;
-mod stateless_ext;
 mod types;
 mod utils;
 mod wasm_cost;

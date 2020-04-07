@@ -47,7 +47,6 @@ pub enum Error {
     #[snafu(display("Reverted"))]
     Reverted,
     */
-
     #[snafu(display("Memory access violation"))]
     MemoryAccessViolation,
 
@@ -92,7 +91,6 @@ pub enum Error {
 
     #[snafu(display("Other unspecified error"))]
     Other,
-
 
     #[snafu(display("Unreachable instruction encountered"))]
     Unreachable,
@@ -139,15 +137,33 @@ impl From<wasmi::Trap> for Error {
 impl From<wasmi::Error> for Error {
     fn from(err: wasmi::Error) -> Self {
         match err {
-            wasmi::Error::Validation(msg) => Error::Wasm{msg: format!("Wasm validation error: {}", msg)},
-            wasmi::Error::Instantiation(msg) => Error::Wasm{msg: format!("Wasm Instantiation error: {}", msg)},
-            wasmi::Error::Function(msg) => Error::Wasm{msg: format!("Wasm Function error: {}", msg)},
-            wasmi::Error::Table(msg) => Error::Wasm{msg: format!("Wasm Table error: {}", msg)},
-            wasmi::Error::Memory(msg) => Error::Wasm{msg: format!("Wasm Memory error: {}", msg)},
-            wasmi::Error::Global(msg) => Error::Wasm{msg: format!("Wasm Global error: {}", msg)},
-            wasmi::Error::Value(msg) => Error::Wasm{msg: format!("Wasm Value error: {}", msg)},
-            wasmi::Error::Trap(k) => Error::Wasm{msg: format!("Wasm Trap error: {}", k)},
-            wasmi::Error::Host(_) => Error::Wasm{msg: format!("Wasm Host error.")},
+            wasmi::Error::Validation(msg) => Error::Wasm {
+                msg: format!("Wasm validation error: {}", msg),
+            },
+            wasmi::Error::Instantiation(msg) => Error::Wasm {
+                msg: format!("Wasm Instantiation error: {}", msg),
+            },
+            wasmi::Error::Function(msg) => Error::Wasm {
+                msg: format!("Wasm Function error: {}", msg),
+            },
+            wasmi::Error::Table(msg) => Error::Wasm {
+                msg: format!("Wasm Table error: {}", msg),
+            },
+            wasmi::Error::Memory(msg) => Error::Wasm {
+                msg: format!("Wasm Memory error: {}", msg),
+            },
+            wasmi::Error::Global(msg) => Error::Wasm {
+                msg: format!("Wasm Global error: {}", msg),
+            },
+            wasmi::Error::Value(msg) => Error::Wasm {
+                msg: format!("Wasm Value error: {}", msg),
+            },
+            wasmi::Error::Trap(k) => Error::Wasm {
+                msg: format!("Wasm Trap error: {}", k),
+            },
+            wasmi::Error::Host(_) => Error::Wasm {
+                msg: format!("Wasm Host error."),
+            },
         }
     }
 }

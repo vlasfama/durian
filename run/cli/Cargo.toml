@@ -1,0 +1,13 @@
+[package]
+name = "cli"
+version = "0.1.0"
+authors = ["Mostafa <mostafa.sedaghat@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+ethereum-types = "0.8.0"
+durian = { path = "../.." }
+simple_logger = "1.4.0"
+log = "0.4"
+hex-literal = "0.2.1"
+blockchain = { path = "../blockchain" }

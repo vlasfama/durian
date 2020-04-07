@@ -1,20 +1,12 @@
-extern crate bincode;
-extern crate durian;
-extern crate ethereum_types;
-extern crate hex_literal;
-extern crate sha3;
-extern crate time;
-
 use durian::error::Error;
 use durian::provider::{StateAccount, Provider};
 use durian::execute::ResultData;
 use durian::transaction::Transaction;
-use ethereum_types::{Address, H160, H256, U256, U512};
+use ethereum_types::{Address, H160, H256, U256};
 use serde::{Deserialize, Serialize};
 use sha3::{Digest, Keccak256};
 use std::collections::HashMap;
-use time::PrimitiveDateTime;
-
+use std::time::SystemTime;
 use hex_literal::hex;
 
 pub type Hash = H256;
@@ -23,7 +15,7 @@ pub type Hash = H256;
 pub struct Block {
     num: u32,
     prev: Hash,
-    time: PrimitiveDateTime,
+    time: SystemTime,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -42,6 +34,11 @@ pub struct Blockchain {
     accounts: HashMap<String, Account>,
     counter: i32,
     pub transactions: HashMap<Hash, (Transaction, ResultData)>,
+}
+
+fn transaction_hash(transaction: &Transaction) -> H256 {
+    let bytes = bincode::serialize(transaction).unwrap();
+    H256::from_slice(Keccak256::digest(&bytes).as_slice())
 }
 
 impl Blockchain {
@@ -83,7 +80,7 @@ impl Blockchain {
         let block = Block::new(self.blocks.len() as u32, self.blocks.last().unwrap().hash());
 
         info!(
-            "Committing new block. num: {:?}, hash: {:?}",
+            "Committing new block. num: {}, hash: {}",
             block.num,
             block.hash()
         );
@@ -92,14 +89,14 @@ impl Blockchain {
         info!("Accounts:");
         for (alias, acc) in self.accounts.iter() {
             info!(
-                "  {:?}: address: {:?}, balance: {:?}, nonce:{:?}",
+                "  {:?}: address: {}, balance: {}, nonce:{}",
                 alias, acc.address, acc.balance, acc.nonce
             );
 
             if !acc.storage.is_empty() {
                 info!("  Storage:");
                 for (key, val) in acc.storage.iter() {
-                    info!("    {:?}: {:?}", key, val);
+                    info!("    {}...: {}", key, val);
                 }
             }
         }
@@ -123,7 +120,7 @@ impl Blockchain {
         acc.code.clone()
     }
 
-    pub fn incNonce(&mut self, alias: &str) {
+    pub fn inc_nonce(&mut self, alias: &str) {
         let mut acc = self.accounts.get_mut(alias).unwrap();
         acc.nonce = acc.nonce + U256::from(1)
     }
@@ -157,17 +154,12 @@ impl Blockchain {
     }
 
     pub fn add_transactions(&mut self, transaction: Transaction, result: ResultData) -> H256 {
-        let txhash = transaction.hash();
+        let txhash = transaction_hash(&transaction);
         self.transactions.insert(txhash, (transaction, result));
         return txhash;
     }
 
-    pub fn storage_at(&mut self, address: Address, data: H256) -> Result<H256, Error> {
-        let sc_deatils = self.storage_at(address, data).unwrap();
-        return Ok(sc_deatils.clone());
-    }
-
-    pub fn get_transactiondetails(
+    pub fn get_transaction_details(
         &mut self,
         hash: H256,
     ) -> Result<(Transaction, ResultData), Error> {
@@ -193,7 +185,7 @@ impl Provider for Blockchain {
         code: &Vec<u8>,
     ) -> Result<(), Error> {
         let name = format!("contract_{}", self.counter + 1);
-        let mut acc = Account::new(*address, U256::zero(), *nonce, code.clone());
+        let acc = Account::new(*address, U256::zero(), *nonce, code.clone());
         self.accounts.insert(name, acc);
         self.counter = self.counter + 1;
         Ok(())
@@ -208,18 +200,18 @@ impl Provider for Blockchain {
     }
 
     fn set_storage(&mut self, address: &Address, key: &H256, value: &H256) -> Result<(), Error> {
-        let mut acc = self.account_mut(address).unwrap();
+        let acc = self.account_mut(address).unwrap();
         let val = acc.storage.entry(*key).or_insert(*value);
         *val = *value;
         Ok(())
     }
 
-    fn blockhash(&self, num: i64) -> U512 {
-        U512::zero()
+    fn blockhash(&self, num: i64) -> H256 {
+        self.blocks.get(num as usize).unwrap().hash()
     }
 
     fn exist(&self, address: &Address) -> bool {
-        false
+        self.account(address).is_ok()
     }
 
     fn update_account(&mut self, address: &Address, bal: &U256, nonce: &U256) -> Result<(), Error> {
@@ -235,7 +227,7 @@ impl Block {
         Block {
             num: num,
             prev: prev,
-            time: PrimitiveDateTime::now(),
+            time: std::time::SystemTime::now(),
         }
     }
 

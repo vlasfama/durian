@@ -9,7 +9,7 @@ use runtime::Runtime;
 use schedule::Schedule;
 use serde::{Deserialize, Serialize};
 use transaction::{Action, Transaction};
-use types::{ActionParams, ActionType, GasLeft, ReturnData};
+use types::{ActionParams, ActionType};
 use utils;
 use wasm_cost::WasmCosts;
 
@@ -25,8 +25,7 @@ pub fn execute(transaction: &Transaction, provider: &mut dyn Provider) -> Result
 	let params = match &transaction.action {
 		Action::Create(code, salt) => {
 			let acc = provider.account(&transaction.sender)?;
-			let new_address =
-				utils::contract_address(&transaction.sender, &acc.nonce, &code, &salt);
+			let new_address = utils::contract_address(&transaction.sender, &code, &salt);
 
 			ActionParams {
 				code_address: new_address.clone(),
@@ -89,7 +88,6 @@ pub fn execute(transaction: &Transaction, provider: &mut dyn Provider) -> Result
 	trace!(target: "wasm", "Contract requested {:?} pages of initial memory", initial_memory);
 
 	let mut cache = Cache::new(provider);
-
 	let mut runtime = Runtime::new(
 		&params,
 		&schedule,
@@ -108,17 +106,23 @@ pub fn execute(transaction: &Transaction, provider: &mut dyn Provider) -> Result
 	runtime.charge(|s| initial_memory as u64 * s.wasm().initial_mem as u64)?;
 
 	let instance = module_instance.run_start(&mut runtime)?;
-	let invoke = instance.invoke_export("call", &[], &mut runtime)?;
+	let invoke_result = instance.invoke_export("call", &[], &mut runtime);
 
-	match invoke {
+	if let Err(wasmi::Error::Trap(ref trap)) = invoke_result {
+		if let wasmi::TrapKind::Host(ref boxed) = *trap.kind() {
+			let ref runtime_err = boxed.downcast_ref::<Error>()
+				.expect("Host errors other than runtime::Error never produced; qed");
 
-		Some(wasmi::RuntimeValue::I64(r)) => {
-			debug!("Invoke_result: {}", r);
-		}
-		_ => {
-			return Err(Error::Wasm {
-				msg: "Invalid result".to_string(),
-			})
+			let mut have_error = false;
+			match **runtime_err {
+				Error::Suicide => { debug!("Contract suicided."); },
+				Error::Return => { debug!("Contract returned."); },
+				_ => {have_error = true;}
+			}
+			if let (true, Err(e)) = (have_error, invoke_result) {
+				trace!(target: "wasm", "Error executing contract: {:?}", e);
+				return Err(Error::from(e));
+			}
 		}
 	}
 
@@ -139,13 +143,11 @@ pub fn execute(transaction: &Transaction, provider: &mut dyn Provider) -> Result
 			logs: vec![], // ext.logs().to_vec(),
 		})
 	} else {
-		let len = result.len();
-		// TODO: Can we move it to runtime?
-		//if transaction.action == Action::Create {
-		//    provider.create_contract(&params.address, 0, data.to_vec());
-		//}
+		if let Action::Create(_, _) = &transaction.action {
+			runtime.init_code(&params.address, result.to_vec());
+		}
 
-		//ext.update_state()?;
+		runtime.update_state()?;
 
 		Ok(ResultData {
 			gas_left: gas_left_adj,
