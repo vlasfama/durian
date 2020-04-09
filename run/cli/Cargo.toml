@@ -11,3 +11,4 @@ simple_logger = "1.4.0"
 log = "0.4"
 hex-literal = "0.2.1"
 blockchain = { path = "../blockchain" }
+web3 ={path="../web3"}

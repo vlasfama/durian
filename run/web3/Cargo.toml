@@ -1,5 +1,5 @@
 [package]
-name = "cli"
+name = "web3"
 version = "0.1.0"
 authors = ["nagaraj <nagarajmanjunath22@gmail.com>"]
 edition = "2018"
@@ -11,3 +11,28 @@ simple_logger = "1.4.0"
 log = "0.4"
 hex-literal = "0.2.1"
 blockchain = { path = "../blockchain" }
+
+jsonrpc-core = "14.0.5"
+jsonrpc-derive = "14.0.5"
+jsonrpc-http-server = "14.0.5"
+
+
+tokio = { version = "0.2", features = ["full"] }
+futures = "0.1"
+futures-cpupool = "0.1"
+primitive-types = "0.1.5"
+serde = "1.0"
+serde_derive = "1.0"
+serde_json = "1.0"
+rustc-hex = "1.0"
+ansi_term = "0.11"
+futures-util = "0.3.4"
+bytes = "0.5.4"
+parity-bytes = "0.1"
+parity-util-mem = "0.5.1"
+tokio-proto = "0.1"
+tokio-service = "0.1"
+tokio-core = "0.1.6"
+tokio-io = "0.1.12"
+
+
