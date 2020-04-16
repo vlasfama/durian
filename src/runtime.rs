@@ -1,12 +1,11 @@
-use cache::Cache;
+use state::State;
 use error::{Error, Result};
 use ethereum_types::{Address, BigEndianHash, H256, U256};
-use log_entry::LogEntry;
 use panic_payload;
 use schedule::Schedule;
+use log_entry::LogEntry;
 use types::{ActionParams, ActionType};
 use wasmi::{MemoryRef, RuntimeArgs, RuntimeValue};
-
 
 pub struct Runtime<'a> {
 	schedule: &'a Schedule,
@@ -15,7 +14,7 @@ pub struct Runtime<'a> {
 	params: &'a ActionParams,
 	memory: MemoryRef,
 	result: Vec<u8>,
-	cache: &'a mut Cache<'a>,
+	state: &'a mut State<'a>,
 	logs: Vec<LogEntry>,
 }
 
@@ -24,7 +23,7 @@ impl<'a> Runtime<'a> {
 	pub fn new(
 		params: &'a ActionParams,
 		schedule: &'a Schedule,
-		cache: &'a mut Cache<'a>,
+		state: &'a mut State<'a>,
 		memory: MemoryRef,
 		gas_limit: u64,
 	) -> Self {
@@ -34,7 +33,7 @@ impl<'a> Runtime<'a> {
 			gas_limit: gas_limit,
 			memory: memory,
 			params: params,
-			cache: cache,
+			state: state,
 			logs: Vec::new(),
 			result: Vec::new(),
 		}
@@ -142,7 +141,7 @@ impl<'a> Runtime<'a> {
 		let key = self.h256_at(args.nth_checked(0)?)?;
 		let val_ptr: u32 = args.nth_checked(1)?;
 
-		let val = self.cache.storage_at(&self.params.address, &key)?;
+		let val = self.state.storage_at(&self.params.address, &key)?;
 
 		self.adjusted_charge(|schedule| schedule.sload_gas as u64)?;
 
@@ -157,7 +156,7 @@ impl<'a> Runtime<'a> {
 		let val_ptr: u32 = args.nth_checked(1)?;
 
 		let val = self.h256_at(val_ptr)?;
-		let former_val = self.cache.storage_at(&self.params.address, &key)?;
+		let former_val = self.state.storage_at(&self.params.address, &key)?;
 
 		if former_val == H256::zero() && val != H256::zero() {
 			self.adjusted_charge(|schedule| schedule.sstore_set_gas as u64)?;
@@ -165,7 +164,7 @@ impl<'a> Runtime<'a> {
 			self.adjusted_charge(|schedule| schedule.sstore_reset_gas as u64)?;
 		}
 
-		self.cache.set_storage(&self.params.address, &key, &val);
+		self.state.set_storage(&self.params.address, &key, &val);
 
 		if former_val != H256::zero() && val == H256::zero() {
 			let sstore_clears_schedule = self.schedule().sstore_refund_gas;
@@ -299,7 +298,7 @@ impl<'a> Runtime<'a> {
 		trace!(target: "wasm", "    result_len: {:?}", result_alloc_len);
 
 		if let Some(val) = val {
-			let address_balance = self.cache.balance(&self.params.address)?;
+			let address_balance = self.state.balance(&self.params.address)?;
 
 			if address_balance < val {
 				trace!(target: "wasm", "runtime: call failed due to balance check");
@@ -560,46 +559,44 @@ impl<'a> Runtime<'a> {
 		})
 	}
 
-	// TODO: Not completed
-	/*
-	///	Signature: `fn blockhash(number: i64, dest: *mut u8)`
-	pub fn blockhash(&mut self, args: RuntimeArgs) -> Result<()> {
+	///	Signature: `fn block_hash(number: i64, dest: *mut u8)`
+	pub fn block_hash(&mut self, args: RuntimeArgs) -> Result<()> {
 		self.adjusted_charge(|schedule| schedule.blockhash_gas as u64)?;
-		let hash = self.ext.blockhash(&U256::from(args.nth_checked::<u64>(0)?));
+		let hash = self.state.block_hash(args.nth_checked::<u64>(0)?)?;
 		self.memory.set(args.nth_checked(1)?, hash.as_bytes())?;
 
 		Ok(())
 	}
 
 	///	Signature: `fn blocknumber() -> i64`
-	pub fn blocknumber(&mut self) -> Result<RuntimeValue> {
-		Ok(RuntimeValue::from(self.ext.env_info().number))
+	pub fn block_number(&mut self) -> Result<RuntimeValue> {
+		Ok(RuntimeValue::from(self.state.block_number()))
 	}
 
-	///	Signature: `fn coinbase(dest: *mut u8)`
-	pub fn coinbase(&mut self, args: RuntimeArgs) -> Result<()> {
-		let coinbase = self.ext.env_info().author;
-		self.return_address_ptr(args.nth_checked(0)?, coinbase)
+	///	Signature: `fn block_author(dest: *mut u8)`
+	pub fn block_author(&mut self, args: RuntimeArgs) -> Result<()> {
+		let author = self.state.block_author()?;
+		self.return_address_ptr(args.nth_checked(0)?, author)
 	}
 
 	///	Signature: `fn difficulty(dest: *mut u8)`
 	pub fn difficulty(&mut self, args: RuntimeArgs) -> Result<()> {
-		let difficulty = self.ext.env_info().difficulty;
+		let difficulty = self.state.difficulty()?;
 		self.return_u256_ptr(args.nth_checked(0)?, difficulty)
 	}
 
 	///	Signature: `fn gaslimit(dest: *mut u8)`
 	pub fn gaslimit(&mut self, args: RuntimeArgs) -> Result<()> {
-		let gas_limit = self.ext.env_info().gas_limit;
+		let gas_limit = self.state.gas_limit()?;
 		self.return_u256_ptr(args.nth_checked(0)?, gas_limit)
 	}
 
 	///	Signature: `timestamp() -> i64`
 	pub fn timestamp(&mut self) -> Result<RuntimeValue> {
-		let timestamp = self.ext.env_info().timestamp;
+		let timestamp = self.state.timestamp();
 		Ok(RuntimeValue::from(timestamp))
 	}
-	*/
+
 	///	Signature: `fn gasleft() -> i64`
 	pub fn gasleft(&mut self) -> Result<RuntimeValue> {
 		Ok(RuntimeValue::from(
@@ -668,16 +665,16 @@ impl<'a> Runtime<'a> {
 	}
 
 	fn add_sstore_refund(&mut self, value: usize) {
-		// TODO: Better calculate the gas after flushing the cache
+		// TODO: Better calculate the gas after flushing the state
 		//self.substate.sstore_clears_refund += value as i128;
 	}
 
 	pub fn init_code(&mut self, address: &Address, code: Vec<u8>) {
-        self.cache.init_code(address, code);
+		self.state.init_code(address, code);
 	}
 
-	pub fn update_state(&mut self) -> Result<()>{
-		self.cache.update_state()
+	pub fn update_state(&mut self) -> Result<()> {
+		self.state.update_state()
 	}
 }
 
@@ -719,12 +716,12 @@ mod ext_impl {
 				VALUE_FUNC => void!(self.value(args)),
 				CREATE_FUNC => some!(self.create(args)),
 				SUICIDE_FUNC => void!(self.suicide(args)),
-				//BLOCKHASH_FUNC => void!(self.blockhash(args)),
-				//BLOCKNUMBER_FUNC => some!(self.blocknumber()),
-				//COINBASE_FUNC => void!(self.coinbase(args)),
-				//DIFFICULTY_FUNC => void!(self.difficulty(args)),
-				//GASLIMIT_FUNC => void!(self.gaslimit(args)),
-				//TIMESTAMP_FUNC => some!(self.timestamp()),
+				BLOCK_HASH_FUNC => void!(self.block_hash(args)),
+				BLOCK_NUMBER_FUNC => some!(self.block_number()),
+				BLOCK_AUTHOR_FUNC => void!(self.block_author(args)),
+				DIFFICULTY_FUNC => void!(self.difficulty(args)),
+				GASLIMIT_FUNC => void!(self.gaslimit(args)),
+				TIMESTAMP_FUNC => some!(self.timestamp()),
 				ADDRESS_FUNC => void!(self.address(args)),
 				SENDER_FUNC => void!(self.sender(args)),
 				ORIGIN_FUNC => void!(self.origin(args)),

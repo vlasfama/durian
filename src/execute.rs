@@ -1,4 +1,3 @@
-use cache::Cache;
 use env;
 use error::{Error, Result};
 use ethereum_types::{Address, U256};
@@ -7,13 +6,13 @@ use parser;
 use provider::Provider;
 use runtime::Runtime;
 use schedule::Schedule;
-use serde::{Deserialize, Serialize};
+use state::State;
 use transaction::{Action, Transaction};
 use types::{ActionParams, ActionType};
 use utils;
 use wasm_cost::WasmCosts;
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ResultData {
 	pub gas_left: U256,
 	pub data: Vec<u8>,
@@ -24,7 +23,6 @@ pub struct ResultData {
 pub fn execute(transaction: &Transaction, provider: &mut dyn Provider) -> Result<ResultData> {
 	let params = match &transaction.action {
 		Action::Create(code, salt) => {
-			let acc = provider.account(&transaction.sender)?;
 			let new_address = utils::contract_address(&transaction.sender, &code, &salt);
 
 			ActionParams {
@@ -87,11 +85,11 @@ pub fn execute(transaction: &Transaction, provider: &mut dyn Provider) -> Result
 	let initial_memory = instantiation_resolver.memory_size()?;
 	trace!(target: "wasm", "Contract requested {:?} pages of initial memory", initial_memory);
 
-	let mut cache = Cache::new(provider);
+	let mut state = State::new(provider);
 	let mut runtime = Runtime::new(
 		&params,
 		&schedule,
-		&mut cache,
+		&mut state,
 		instantiation_resolver.memory_ref(),
 		// cannot overflow, checked above
 		adjusted_gas.low_u64(),
@@ -110,14 +108,21 @@ pub fn execute(transaction: &Transaction, provider: &mut dyn Provider) -> Result
 
 	if let Err(wasmi::Error::Trap(ref trap)) = invoke_result {
 		if let wasmi::TrapKind::Host(ref boxed) = *trap.kind() {
-			let ref runtime_err = boxed.downcast_ref::<Error>()
+			let ref runtime_err = boxed
+				.downcast_ref::<Error>()
 				.expect("Host errors other than runtime::Error never produced; qed");
 
 			let mut have_error = false;
 			match **runtime_err {
-				Error::Suicide => { debug!("Contract suicided."); },
-				Error::Return => { debug!("Contract returned."); },
-				_ => {have_error = true;}
+				Error::Suicide => {
+					debug!("Contract suicided.");
+				}
+				Error::Return => {
+					debug!("Contract returned.");
+				}
+				_ => {
+					have_error = true;
+				}
 			}
 			if let (true, Err(e)) = (have_error, invoke_result) {
 				trace!(target: "wasm", "Error executing contract: {:?}", e);
