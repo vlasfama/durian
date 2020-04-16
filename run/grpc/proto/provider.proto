@@ -1,0 +1,85 @@
+
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "io.grpc.examples.helloworld";
+option java_outer_classname = "ProvidernameProto";
+
+package provider;
+
+// The greeting service definition.
+service Provider {
+  // Sends a greeting
+  rpc exist (existRequest) returns (existResponse) {}
+  rpc storage_at (storageRequest) returns (storageResponse) {}
+  rpc blockhash (blockRequest) returns (blockResponse) {}
+  rpc create_contract (contractRequest) returns (contractResponse) {}
+  rpc update_account (AccountRequest) returns (AccountResponse) {}
+  rpc set_storage (setStorageRequest) returns (setStorageResponse) {}
+}
+
+// The request message containing the user's name.
+message existRequest {
+  string address = 1;
+}
+
+// The response message containing the greetings
+message existResponse {
+  string message = 1;
+}
+
+
+// The request message containing the user's name.
+message storageRequest {
+  string address = 1;
+}
+
+// The response message containing the greetings
+message storageResponse {
+  string message = 1;
+}
+
+// The request message containing the user's name.
+message blockRequest {
+  string address = 1;
+}
+
+// The response message containing the greetings
+message blockResponse {
+  string message = 1;
+}
+
+// The request message containing the user's name.
+message contractRequest {
+  string address = 1;
+}
+
+// The response message containing the greetings
+message contractResponse {
+  string message = 1;
+}
+
+// The request message containing the user's name.
+message AccountRequest {
+  string address = 1;
+}
+
+// The response message containing the greetings
+message AccountResponse {
+  string message = 1;
+}
+
+// The request message containing the user's name.
+message setStorageRequest {
+  string address = 1;
+}
+
+// The response message containing the greetings
+message setStorageResponse {
+  string message = 1;
+}
+
+
+
+
+
