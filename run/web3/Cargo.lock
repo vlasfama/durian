@@ -281,8 +281,6 @@ dependencies = [
  "log 0.4.8",
  "parity-wasm",
  "pwasm-utils",
- "serde",
- "sha3",
  "snafu",
  "wasmi",
 ]
