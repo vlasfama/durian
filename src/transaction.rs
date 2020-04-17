@@ -1,10 +1,8 @@
 use super::Bytes;
 use ethereum_types::{Address, H256, U256};
 use parity_wasm::peek_size;
-use serde::{Deserialize, Serialize};
-use sha3::{Digest, Keccak256};
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Action {
     /// Create creates new contract.
     /// Code + salt
@@ -14,7 +12,7 @@ pub enum Action {
     Call(Address),
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Transaction {
     pub sender: Address,
     pub value: U256,

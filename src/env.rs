@@ -20,9 +20,9 @@ pub mod ids {
 	pub const VALUE_FUNC: usize = 90;
 	pub const CREATE_FUNC: usize = 100;
 	pub const SUICIDE_FUNC: usize = 110;
-	pub const BLOCKHASH_FUNC: usize = 120;
-	pub const BLOCKNUMBER_FUNC: usize = 130;
-	pub const COINBASE_FUNC: usize = 140;
+	pub const BLOCK_HASH_FUNC: usize = 120;
+	pub const BLOCK_NUMBER_FUNC: usize = 130;
+	pub const BLOCK_AUTHOR_FUNC: usize = 140;
 	pub const DIFFICULTY_FUNC: usize = 150;
 	pub const GASLIMIT_FUNC: usize = 160;
 	pub const TIMESTAMP_FUNC: usize = 170;
@@ -76,11 +76,11 @@ pub mod signatures {
 
 	pub const SUICIDE: StaticSignature = StaticSignature(&[I32], None);
 
-	pub const BLOCKHASH: StaticSignature = StaticSignature(&[I64, I32], None);
+	pub const BLOCK_HASH: StaticSignature = StaticSignature(&[I64, I32], None);
 
-	pub const BLOCKNUMBER: StaticSignature = StaticSignature(&[], Some(I64));
+	pub const BLOCK_NUMBER: StaticSignature = StaticSignature(&[], Some(I64));
 
-	pub const COINBASE: StaticSignature = StaticSignature(&[I32], None);
+	pub const BLOCK_AUTHOR: StaticSignature = StaticSignature(&[I32], None);
 
 	pub const DIFFICULTY: StaticSignature = StaticSignature(&[I32], None);
 
@@ -177,9 +177,9 @@ impl wasmi::ModuleImportResolver for ImportResolver {
 			"value" => host(signatures::VALUE, ids::VALUE_FUNC),
 			"create" => host(signatures::CREATE, ids::CREATE_FUNC),
 			"suicide" => host(signatures::SUICIDE, ids::SUICIDE_FUNC),
-			"blockhash" => host(signatures::BLOCKHASH, ids::BLOCKHASH_FUNC),
-			"blocknumber" => host(signatures::BLOCKNUMBER, ids::BLOCKNUMBER_FUNC),
-			"coinbase" => host(signatures::COINBASE, ids::COINBASE_FUNC),
+			"block_hash" => host(signatures::BLOCK_HASH, ids::BLOCK_HASH_FUNC),
+			"blocknumber" => host(signatures::BLOCK_NUMBER, ids::BLOCK_NUMBER_FUNC),
+			"coinbase" => host(signatures::BLOCK_AUTHOR, ids::BLOCK_AUTHOR_FUNC),
 			"difficulty" => host(signatures::DIFFICULTY, ids::DIFFICULTY_FUNC),
 			"gaslimit" => host(signatures::GASLIMIT, ids::GASLIMIT_FUNC),
 			"timestamp" => host(signatures::TIMESTAMP, ids::TIMESTAMP_FUNC),

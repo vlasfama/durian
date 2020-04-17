@@ -7,8 +7,6 @@ extern crate ethereum_types;
 extern crate keccak_hash;
 extern crate parity_wasm;
 extern crate pwasm_utils;
-extern crate serde;
-extern crate sha3;
 extern crate snafu;
 extern crate wasmi;
 
@@ -16,11 +14,10 @@ pub mod error;
 pub mod provider;
 pub mod transaction;
 pub mod execute;
+pub mod log_entry;
 
-
-mod cache;
+mod state;
 mod env;
-mod log_entry;
 mod panic_payload;
 mod parser;
 mod runtime;
