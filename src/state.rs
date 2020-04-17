@@ -1,8 +1,8 @@
-use ethereum_types::{Address, H256, U256, U512};
-use log::{debug};
+use error::Result;
+use ethereum_types::{Address, H256, U256};
+use log::debug;
 use provider::Provider;
 use std::collections::HashMap;
-use error::{Error, Result};
 
 #[derive(Debug, Clone, PartialEq)]
 struct AccountInfo {
@@ -23,28 +23,57 @@ impl AccountInfo {
     }
 }
 
-pub struct Cache<'a> {
+pub struct State<'a> {
     provider: &'a mut dyn Provider,
     accounts: HashMap<Address, (AccountInfo, bool)>,
 }
 
-impl<'a> Cache<'a>
-{
+impl<'a> State<'a> {
     pub fn new(provider: &'a mut dyn Provider) -> Self {
-        Cache {
+        State {
             provider: provider,
             accounts: HashMap::new(),
         }
     }
 
+    #[allow(dead_code)]
     pub fn nonce(&mut self, address: &Address) -> Result<U256> {
         let acc = self.account(address)?;
         Ok(acc.nonce)
     }
-
+    
     pub fn balance(&mut self, address: &Address) -> Result<U256> {
         let acc = self.account(address)?;
         Ok(acc.balance)
+    }
+
+    #[allow(dead_code)]
+    pub fn exist(&self, address: &Address) -> bool {
+        self.provider.exist(address)
+    }
+
+    pub fn timestamp(&self) -> u64 {
+        self.provider.block_number()
+    }
+
+    pub fn block_number(&self) -> u64 {
+        self.provider.block_number()
+    }
+
+    pub fn block_hash(&self, block_no: u64) -> Result<H256> {
+        self.provider.block_hash(block_no)
+    }
+
+    pub fn block_author(&self) -> Result<Address> {
+        self.provider.block_author()
+    }
+
+    pub fn difficulty(&self) -> Result<U256> {
+        self.provider.difficulty()
+    }
+
+    pub fn gas_limit(&self) -> Result<U256> {
+        self.provider.gas_limit()
     }
 
     pub fn storage_at(&mut self, address: &Address, key: &H256) -> Result<H256> {
@@ -68,14 +97,6 @@ impl<'a> Cache<'a>
         acc.0.storage.insert(*key, (*value, true));
     }
 
-    pub fn blockhash(&self, _num: i64) -> U512 {
-        U512::zero()
-    }
-
-    pub fn exist(&self, _address: Address) -> bool {
-        false
-    }
-
     fn account_mut(&mut self, address: &Address) -> Result<&mut (AccountInfo, bool)> {
         self.fetch_account(address)?;
 
@@ -94,13 +115,14 @@ impl<'a> Cache<'a>
         acc.1 = true;
     }
 
-    pub fn update_state(&mut self) -> Result<()>{
+    pub fn update_state(&mut self) -> Result<()> {
         for (addr, acc) in &self.accounts {
             if acc.1 {
                 if !self.provider.exist(addr) {
-                    self.provider.create_contract(addr, &acc.0.nonce, &acc.0.code)?;
+                    self.provider.create_contract(addr, &acc.0.code)?;
                 } else {
-                    self.provider.update_account(addr, &acc.0.balance, &acc.0.nonce)?;
+                    self.provider
+                        .update_account(addr, &acc.0.balance, &acc.0.nonce)?;
                 }
             }
 

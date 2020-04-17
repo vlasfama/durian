@@ -4,49 +4,9 @@ use wasmi::TrapKind;
 
 #[derive(Debug, Clone, Snafu)]
 pub enum Error {
-    /*
-    TODO: vm errors: do we need in durian. most of them is related to evm
+    #[snafu(display("Not supported"))]
+    NotSupported,
 
-    #[snafu(display("Out of gas",))]
-    OutOfGas,
-
-    #[snafu(display("Bad jump destination {}", destination))]
-    BadJumpDestination { destination: usize },
-
-    #[snafu(display("Bad instruction {}", instruction))]
-    BadInstruction { instruction: u8 },
-
-    #[snafu(display("Stack underflow {} {}/{}", instruction, wanted, on_stack))]
-    StackUnderflow {
-        instruction: String,
-        wanted: usize,
-        on_stack: usize,
-    },
-
-    #[snafu(display("Out of stack {} {}/{}", instruction, wanted, limit))]
-    OutOfStack {
-        instruction: String,
-        wanted: usize,
-        limit: usize,
-    },
-
-    #[snafu(display("Built-in failed: {}", msg))]
-    BuiltIn { msg: String },
-
-    #[snafu(display("Mutable call in static context"))]
-    MutableCallInStaticContext,
-
-    #[snafu(display("Internal error: {}", msg))]
-    Internal { msg: String },
-
-
-
-    #[snafu(display("Out of bounds"))]
-    OutOfBounds,
-
-    #[snafu(display("Reverted"))]
-    Reverted,
-    */
     #[snafu(display("Memory access violation"))]
     MemoryAccessViolation,
 

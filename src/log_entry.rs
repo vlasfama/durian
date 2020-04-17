@@ -1,7 +1,6 @@
 use ethereum_types::{Address, H256};
-use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct LogEntry {
     pub address: Address,
     pub topics: Vec<H256>,
