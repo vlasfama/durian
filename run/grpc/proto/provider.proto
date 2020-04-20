@@ -50,13 +50,21 @@ message blockResponse {
 }
 
 // The request message containing the user's name.
+
 message contractRequest {
-  string address = 1;
+	bytes from =1;
+	bytes to =2;
+	bytes gas_price=3;
+	bytes gas=4;
+	bytes value=5;
+	bytes data=6;
+	int64 nonce=7;
 }
 
 // The response message containing the greetings
+
 message contractResponse {
-  string message = 1;
+  bytes txhash = 1;
 }
 
 // The request message containing the user's name.

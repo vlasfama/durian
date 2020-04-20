@@ -14,7 +14,7 @@ pub use self::helpers::{FilledTransactionRequest, TransactionRequest};
 pub use self::metadata::Metadata;
 pub use self::rpc_service::start_http
 pub use self::rpc_apis::ApiSet;
-pub use self::rpc::{HttpConfiguration,new_http}
+pub use self::rpc::{HttpConfiguration,new_http};
 pub use self::traits::TransactionRPC;
 pub use self::types::Origin;
 pub use event_loop::{event_loop, forever};
