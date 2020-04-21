@@ -9,3 +9,5 @@ extern crate sha3;
 pub mod account;
 pub mod block;
 pub mod blockchain;
+
+pub use self::blockchain::Blockchain;

@@ -11,42 +11,69 @@ package provider;
 service Provider {
   // Sends a greeting
   rpc exist (existRequest) returns (existResponse) {}
+  rpc account (accountRequest) returns (accountResponse) {}
   rpc storage_at (storageRequest) returns (storageResponse) {}
-  rpc blockhash (blockRequest) returns (blockResponse) {}
+  rpc blockhash (blockhashRequest) returns (blockhashResponse) {}
   rpc create_contract (contractRequest) returns (contractResponse) {}
-  rpc update_account (AccountRequest) returns (AccountResponse) {}
+  rpc update_account (updateRequest) returns (updateResponse) {}
   rpc set_storage (setStorageRequest) returns (setStorageResponse) {}
+  rpc timestamp (timestampRequest) returns (timpestampResponse) {}
+  rpc block_number (Empty) returns (blocknumberResponse) {}
+  rpc block_author(Empty) returns (authorResponse) {}
+  rpc difficulty(Empty) returns (difficultyResponse) {}
+  rpc gas_limit(Empty)  returns (gasResponse) {}
+}
+
+
+
+message Empty{
+
+}
+
+message blocknumberResponse{
+  uint64 message =1;
+}
+
+message authorResponse{
+ bytes message =1;
+}
+message difficultyResponse{
+  bytes message=1;
+}
+message gasResponse{
+    bytes gas=1;
 }
 
 // The request message containing the user's name.
 message existRequest {
-  string address = 1;
+  bytes address = 1;
 }
 
 // The response message containing the greetings
 message existResponse {
-  string message = 1;
+  bool message = 1;
 }
 
 
 // The request message containing the user's name.
 message storageRequest {
-  string address = 1;
+  bytes address = 1;
+  bytes key =2;
 }
 
 // The response message containing the greetings
 message storageResponse {
-  string message = 1;
+  bytes message = 1;
 }
 
 // The request message containing the user's name.
-message blockRequest {
-  string address = 1;
+message blockhashRequest {
+  uint64 num = 1;
 }
 
 // The response message containing the greetings
-message blockResponse {
-  string message = 1;
+message blockhashResponse {
+  bytes message = 1;
 }
 
 // The request message containing the user's name.
@@ -68,26 +95,48 @@ message contractResponse {
 }
 
 // The request message containing the user's name.
-message AccountRequest {
-  string address = 1;
+message updateRequest {
+  bytes address = 1;
+  bytes balance=2;
+  bytes nonce=3;
 }
 
 // The response message containing the greetings
-message AccountResponse {
-  string message = 1;
+message updateResponse {
+  bool message = 1;
 }
 
 // The request message containing the user's name.
 message setStorageRequest {
-  string address = 1;
+  bytes address = 1;
+  bytes key=2;
+  bytes value=3;
 }
 
 // The response message containing the greetings
 message setStorageResponse {
-  string message = 1;
+  bool message = 1;
 }
 
 
 
+// The request message containing the user's name.
+message accountRequest {
+  bytes address = 1;
+}
 
+// The response message containing the greetings
+message accountResponse {
+  bytes balance = 1;
+  bytes nonce = 2;
+  bytes code = 3;
 
+}
+
+message timestampRequest{
+
+}
+
+message timpestampResponse {
+ uint64  message =1;
+}
