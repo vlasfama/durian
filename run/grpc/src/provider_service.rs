@@ -1,18 +1,14 @@
 extern crate blockchain;
 extern crate durian;
 use blockchain::blockchain::Blockchain;
-use durian::execute;
 use durian::provider::Provider as durian_provider;
-use durian::transaction::Transaction;
 use ethereum_types::{H160, H256, U256};
 use provider_server::provider_server::Provider;
-
 use provider_server::{
     AccountRequest, AccountResponse, AuthorResponse, BlockhashRequest, BlockhashResponse,
-    BlocknumberResponse, ContractRequest, ContractResponse, DifficultyResponse, Empty,
-    ExistRequest, ExistResponse, GasResponse, SetStorageRequest, SetStorageResponse,
-    StorageRequest, StorageResponse, TimestampRequest, TimpestampResponse, UpdateRequest,
-    UpdateResponse,
+    BlocknumberResponse, ContractRequest, DifficultyResponse, Empty, ExistRequest, ExistResponse,
+    GasResponse, SetStorageRequest, SetStorageResponse, StorageRequest, StorageResponse,
+    TimestampRequest, TimpestampResponse, UpdateRequest, UpdateResponse,
 };
 use std::sync::Mutex;
 use tonic::{Request, Response, Status};
@@ -38,10 +34,10 @@ impl Provider for MyProvider {
         &self,
         request: Request<ExistRequest>,
     ) -> Result<Response<ExistResponse>, Status> {
-        let mut bc = self.bc.lock().unwrap();
-        let msg = request.into_inner();
+        let bc = self.bc.lock().unwrap();
+        let _msg = request.into_inner();
 
-        let addr = msg.address;
+        let addr = _msg.address;
         let address = H160::from_slice(&addr);
 
         //call the exist method
@@ -55,18 +51,18 @@ impl Provider for MyProvider {
         &self,
         request: Request<StorageRequest>, // Accept request of type HelloRequest
     ) -> Result<Response<StorageResponse>, Status> {
-        let msg = request.into_inner();
+        let _msg = request.into_inner();
 
-        let addr = msg.address;
+        let addr = _msg.address;
         let address = H160::from_slice(&addr);
 
-        let key = msg.key;
+        let key = _msg.key;
         let key_addr = H256::from_slice(&key);
 
-        let mut bc = self.bc.lock().unwrap();
+        let bc = self.bc.lock().unwrap();
         let value = &bc.storage_at(&address, &key_addr);
 
-        let result = value.unwrap().as_bytes().to_vec();
+        let result = value.as_ref().unwrap().as_bytes().to_vec();
 
         let reply = provider_server::StorageResponse { message: result };
 
@@ -78,12 +74,12 @@ impl Provider for MyProvider {
         &self,
         request: Request<BlockhashRequest>,
     ) -> Result<Response<BlockhashResponse>, Status> {
-        let msg = request.into_inner();
-        let num = msg.num;
+        let _msg = request.into_inner();
+        let num = _msg.num;
 
-        let mut bc = self.bc.lock().unwrap();
+        let bc = self.bc.lock().unwrap();
         let value = &bc.block_hash(num);
-        let result = value.unwrap();
+        let result = value.as_ref().unwrap();
         let reply = provider_server::BlockhashResponse {
             message: result.as_bytes().to_vec(),
         };
@@ -96,19 +92,19 @@ impl Provider for MyProvider {
         &self,
         request: Request<UpdateRequest>, // Accept request of type HelloRequest
     ) -> Result<Response<UpdateResponse>, Status> {
-        let msg = request.into_inner();
+        let _msg = request.into_inner();
 
-        let addr = msg.address;
+        let addr = _msg.address;
         let address = H160::from_slice(&addr);
 
-        let bal = msg.balance;
+        let bal = _msg.balance;
         let balance = U256::from_big_endian(&bal);
 
-        let nc = msg.nonce;
+        let nc = _msg.nonce;
         let nonce = U256::from_big_endian(&nc);
 
         let mut bc = self.bc.lock().unwrap();
-        let value = &bc.update_account(&address, &balance, &nonce);
+        &bc.update_account(&address, &balance, &nonce);
 
         let result = true;
         let reply = provider_server::UpdateResponse {
@@ -122,40 +118,17 @@ impl Provider for MyProvider {
     async fn create_contract(
         &self,
         request: Request<ContractRequest>, // Accept request of type HelloRequest
-    ) -> Result<Response<ContractResponse>, Status> {
+    ) -> Result<Response<Empty>, Status> {
         //instance of blockchain
         let mut bc = self.bc.lock().unwrap();
-        let msg = request.into_inner();
+        let _msg = request.into_inner();
 
-        let from = msg.from;
-        let from_address = H160::from_slice(&from);
+        let from = _msg.address;
+        let address = H160::from_slice(&from);
+        let data = _msg.code;
+        &bc.create_contract(&address, &data);
 
-        let data = msg.data;
-        let va = msg.value;
-        let value = U256::from_big_endian(&va);
-
-        let gas = msg.gas;
-        let gas_value = U256::from_big_endian(&gas);
-        let code = data;
-        bc.commit();
-        let tx1 = Transaction::make_create_embedded_code(
-            from_address,
-            U256::zero(),
-            value,
-            gas_value,
-            code,
-            H256::zero(),
-        );
-
-        let ret1 = execute::execute(&tx1.clone(), &mut bc.clone()).unwrap();
-        let tx_hash = bc.add_transactions(tx1, ret1);
-        let hash = tx_hash.as_bytes();
-        bc.inc_nonce("naga");
-        bc.commit();
-
-        let reply = provider_server::ContractResponse {
-            txhash: hash.to_vec(),
-        };
+        let reply = provider_server::Empty {};
         Ok(Response::new(reply)) // Send back our formatted greeting
     }
 
@@ -163,20 +136,21 @@ impl Provider for MyProvider {
         &self,
         request: Request<SetStorageRequest>, // Accept request of type HelloRequest
     ) -> Result<Response<SetStorageResponse>, Status> {
-        let msg = request.into_inner();
+        let _msg = request.into_inner();
 
-        let addr = msg.address;
+        let addr = _msg.address;
         let address = H160::from_slice(&addr);
 
-        let key = msg.key;
+        let key = _msg.key;
         let _key = H256::from_slice(&key);
 
-        let val = msg.value;
+        let val = _msg.value;
         let value = H256::from_slice(&val);
 
         let mut bc = self.bc.lock().unwrap();
         let _value = &bc.set_storage(&address, &_key, &value);
         let result = true;
+
         let reply = provider_server::SetStorageResponse {
             message: result, // We must use .into_inner() as the fields of gRPC requests and responses are private
         };
@@ -188,20 +162,23 @@ impl Provider for MyProvider {
         &self,
         request: Request<AccountRequest>, // Accept request of type HelloRequest
     ) -> Result<Response<AccountResponse>, Status> {
-        let msg = request.into_inner();
+        let _msg = request.into_inner();
 
-        let addr = msg.address;
+        let addr = _msg.address;
         let address = H160::from_slice(&addr);
 
-        let mut bc = self.bc.lock().unwrap();
+        let bc = self.bc.lock().unwrap();
         let _value = &bc.account(&address);
 
-        let bal = _value.unwrap().balance;
+        let bal = _value.as_ref().unwrap().balance;
+        let balance = bincode::serialize(&bal).unwrap();
 
-        let code = _value.unwrap().code;
-        let nonce = _value.unwrap().nonce;
+        let code = _value.as_ref().unwrap().code.clone();
+        let non = _value.as_ref().unwrap().nonce;
+        let nonce = bincode::serialize(&non).unwrap();
+
         let reply = provider_server::AccountResponse {
-            balance: bal,
+            balance: balance,
             code: code,
             nonce: nonce, // We must use .into_inner() as the fields of gRPC requests and responses are private
         };
@@ -213,9 +190,9 @@ impl Provider for MyProvider {
         &self,
         request: Request<TimestampRequest>, // Accept request of type HelloRequest
     ) -> Result<Response<TimpestampResponse>, Status> {
-        let msg = request.into_inner();
+        let _msg = request.into_inner();
 
-        let mut bc = self.bc.lock().unwrap();
+        let bc = self.bc.lock().unwrap();
         let value = &bc.timestamp();
         let reply = provider_server::TimpestampResponse { message: *value };
 
@@ -226,9 +203,9 @@ impl Provider for MyProvider {
         &self,
         request: Request<Empty>, // Accept request of type HelloRequest
     ) -> Result<Response<BlocknumberResponse>, Status> {
-        let msg = request.into_inner();
+        let _msg = request.into_inner();
 
-        let mut bc = self.bc.lock().unwrap();
+        let bc = self.bc.lock().unwrap();
         let value = &bc.block_number();
         let reply = provider_server::BlocknumberResponse { message: *value };
 
@@ -239,11 +216,11 @@ impl Provider for MyProvider {
         &self,
         request: Request<Empty>, // Accept request of type HelloRequest
     ) -> Result<Response<AuthorResponse>, Status> {
-        let msg = request.into_inner();
+        let _msg = request.into_inner();
 
-        let mut bc = self.bc.lock().unwrap();
+        let bc = self.bc.lock().unwrap();
         let value = &bc.block_author();
-        let result = value.unwrap().as_bytes().to_vec();
+        let result = value.as_ref().unwrap().as_bytes().to_vec();
         let reply = provider_server::AuthorResponse { message: result };
 
         Ok(Response::new(reply)) // Send back our formatted greeting
@@ -253,10 +230,11 @@ impl Provider for MyProvider {
         &self,
         request: Request<Empty>, // Accept request of type HelloRequest
     ) -> Result<Response<DifficultyResponse>, Status> {
-        let msg = request.into_inner();
-        let mut bc = self.bc.lock().unwrap();
+        let _msg = request.into_inner();
+        let bc = self.bc.lock().unwrap();
         let value = &bc.difficulty();
-        let result = value.unwrap();
+        let re = value.as_ref().unwrap();
+        let result = bincode::serialize(&re).unwrap();
         let reply = provider_server::DifficultyResponse { message: result };
         Ok(Response::new(reply)) // Send back our formatted greeting
     }
@@ -265,11 +243,13 @@ impl Provider for MyProvider {
         &self,
         request: Request<Empty>, // Accept request of type HelloRequest
     ) -> Result<Response<GasResponse>, Status> {
-        let msg = request.into_inner();
-        let mut bc = self.bc.lock().unwrap();
+        let _msg = request.into_inner();
+        let bc = self.bc.lock().unwrap();
         let value = &bc.gas_limit();
-        let result = value.unwrap();
+        let re = value.as_ref().unwrap();
+        let result = bincode::serialize(&re).unwrap();
         let reply = provider_server::GasResponse { gas: result };
+
         Ok(Response::new(reply)) // Send back our formatted greeting
     }
 }

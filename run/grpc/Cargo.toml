@@ -15,18 +15,10 @@ ethereum-types = "0.8.0"
 tokio = { version = "0.2", features = ["macros"] }
 blockchain = { path = "../blockchain" }
 durian = { path = "../.." }
+bincode = "1.0"
 
 [build-dependencies]
 tonic-build = "0.2"
-
-[[bin]] # Bin to run the HelloWorld gRPC server
-name = "helloworld-server"
-path = "src/server.rs"
-
-[[bin]] # Bin to run the HelloWorld gRPC client
-name = "helloworld-client"
-path = "src/client.rs"
-
 
 
 [[bin]] # Bin to run the HelloWorld gRPC server

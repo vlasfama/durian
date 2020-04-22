@@ -14,7 +14,7 @@ service Provider {
   rpc account (accountRequest) returns (accountResponse) {}
   rpc storage_at (storageRequest) returns (storageResponse) {}
   rpc blockhash (blockhashRequest) returns (blockhashResponse) {}
-  rpc create_contract (contractRequest) returns (contractResponse) {}
+  rpc create_contract (contractRequest) returns (Empty) {}
   rpc update_account (updateRequest) returns (updateResponse) {}
   rpc set_storage (setStorageRequest) returns (setStorageResponse) {}
   rpc timestamp (timestampRequest) returns (timpestampResponse) {}
@@ -79,20 +79,12 @@ message blockhashResponse {
 // The request message containing the user's name.
 
 message contractRequest {
-	bytes from =1;
-	bytes to =2;
-	bytes gas_price=3;
-	bytes gas=4;
-	bytes value=5;
-	bytes data=6;
-	int64 nonce=7;
+	bytes address =1;
+	bytes code=2;
+
 }
 
 // The response message containing the greetings
-
-message contractResponse {
-  bytes txhash = 1;
-}
 
 // The request message containing the user's name.
 message updateRequest {
