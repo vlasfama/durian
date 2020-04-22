@@ -1,7 +1,8 @@
+extern crate blockchain;
 extern crate durian;
 extern crate ethereum_types;
 extern crate simple_logger;
-extern crate blockchain;
+
 #[macro_use]
 extern crate log;
 

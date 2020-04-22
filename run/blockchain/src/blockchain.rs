@@ -3,7 +3,7 @@ use crate::block::Block;
 use durian::error::{Error, Result};
 use durian::execute::ResultData;
 use durian::provider::{Provider, StateAccount};
-use durian::transaction::{Transaction, Action};
+use durian::transaction::{Action, Transaction};
 use ethereum_types::{Address, H160, H256, U256};
 use hex_literal::hex;
 use sha3::{Digest, Keccak256};
@@ -162,6 +162,14 @@ impl Blockchain {
     pub fn get_transaction_details(&mut self, hash: H256) -> Result<(Transaction, ResultData)> {
         let tx = self.transactions.get(&hash).unwrap();
         return Ok(tx.clone());
+    }
+
+    pub fn block_number(&self) -> u64 {
+        self.blocks.last().unwrap().num
+    }
+
+    pub fn latest_block_hash(&self) -> H256 {
+        self.blocks.last().unwrap().hash()
     }
 }
 
