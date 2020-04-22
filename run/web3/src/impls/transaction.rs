@@ -65,7 +65,7 @@ impl TransactionRPC for TransactionRPCImpl {
 		let params_vec = Bytes::into_vec(params);
 
 		let tx_call = Transaction::make_call(
-			bc.address("naga"),
+			bc.address_from_alias("naga"),
 			contract_address,
 			U256::zero(),
 			U256::from(1000000),
